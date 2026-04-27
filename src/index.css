@@ -13,18 +13,57 @@ code {
     monospace;
 }
 
-/* Scrollbar (Kaydırma Çubuğu) gizleme - Tasarımın temiz durması için */
+/* Scrollbar (Kaydırma Çubuğu) gizleme */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
 .no-scrollbar {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 /* Mobil cihazlarda input alanlarında otomatik zoom'u engeller */
 @media screen and (max-width: 768px) {
   input, select, textarea {
     font-size: 16px !important;
+  }
+}
+
+/* iOs alt bar çakışmalarını engellemek için */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* --- YAZDIRMA (PDF) İÇİN TEK SAYFA DÜZENİ --- */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 1cm; /* A4 kenar boşlukları */
+  }
+
+  body {
+    background-color: white !important;
+    margin: 0;
+    padding: 0;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Ana Container'ı A4 Boyutuna Kitleyen Özel Sınıf */
+  .print-a4-page {
+    width: 100%;
+    /* A4 sayfasının içilebilir max yüksekliği (29.7cm - marginler) */
+    max-height: 27.7cm; 
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* Taşanları 2. sayfaya geçmek yerine gizle/sıkıştır */
+  }
+
+  .print-recipes-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    overflow: hidden;
   }
 }

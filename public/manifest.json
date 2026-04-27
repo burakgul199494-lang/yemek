@@ -1,6 +1,6 @@
 {
-  "short_name": "Birim Takip",
-  "name": "Birim Takip",
+  "short_name": "Bizim Mutfak",
+  "name": "Bizim Mutfak Planlayıcı",
   "icons": [
     {
       "src": "favicon.ico",
@@ -20,6 +20,6 @@
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#4f46e5",
-  "background_color": "#ffffff"
+  "theme_color": "#ea580c",
+  "background_color": "#fff7ed"
 }

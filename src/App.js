@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { 
   ChefHat, PlusCircle, CalendarDays, Printer, 
-  Image as ImageIcon, X, List, Layers, ShoppingCart, ArrowLeft, Search
+  Image as ImageIcon, X, List, Layers, ShoppingCart, ArrowLeft, Search, LogOut
 } from 'lucide-react';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { auth } from './firebase';
 
 import YeniEkle from './components/YeniEkle';
 import Menulerim from './components/Menulerim';
+import Login from './components/Login';
 
 const KATEGORILER = ['Çorba', 'Ana Yemek', 'Zeytinyağlı', 'Ara Sıcak', 'Salata/Meze', 'Tatlı', 'Kahvaltılık'];
 const BIRIMLER = ['gr', 'kg', 'ml', 'Litre', 'adet', 'yemek kaşığı', 'tatlı kaşığı', 'çay kaşığı', 'su bardağı', 'çay bardağı', 'tutam', 'paket'];
@@ -16,7 +19,6 @@ const getHaftaTarihleri = () => {
   bugun.setHours(0,0,0,0);
   const gunDegeri = bugun.getDay(); 
   const pazartesiyeUzaklik = gunDegeri === 0 ? 6 : gunDegeri - 1;
-  
   const pazartesi = new Date(bugun);
   pazartesi.setDate(bugun.getDate() - pazartesiyeUzaklik);
 
@@ -46,8 +48,11 @@ const ornekTarifler = [
 ];
 
 export default function App() {
+  // GİRİŞ KONTROLÜ İÇİN YENİ STATE'LER
+  const [kullanici, setKullanici] = useState(null);
+  const [yukleniyor, setYukleniyor] = useState(true);
+
   const [aktifSekme, setAktifSekme] = useState('ekle'); 
-  
   const haftaBilgisi = getHaftaTarihleri();
   const gunTarihleri = haftaBilgisi.tarihler;
 
@@ -80,10 +85,18 @@ export default function App() {
   const [detayGosterilenTarif, setDetayGosterilenTarif] = useState(null);
   const [detayMenu, setDetayMenu] = useState(null);
   const [neredenGeldi, setNeredenGeldi] = useState(null);
-
   const [yeniMenu, setYeniMenu] = useState({ ad: '', tarifler: [] });
   const [modal, setModal] = useState({ acik: false, tip: '', mesaj: '', onOnay: null });
   const [yeniTarif, setYeniTarif] = useState({ ad: '', kategori: 'Ana Yemek', resim: '', malzemeler: [{ miktar: '', birim: 'gr', isim: '' }], hazirlanis: [''] });
+
+  // FIREBASE GİRİŞ KONTROLÜ
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setKullanici(currentUser);
+      setYukleniyor(false);
+    });
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => localStorage.setItem('tarifler', JSON.stringify(tarifler)), [tarifler]);
   useEffect(() => {
@@ -91,6 +104,10 @@ export default function App() {
     localStorage.setItem('kayitliHafta', haftaBilgisi.pazartesiStr);
   }, [haftalikPlan, haftaBilgisi.pazartesiStr]);
   useEffect(() => localStorage.setItem('menuler', JSON.stringify(menuler)), [menuler]);
+
+  const cikisYap = () => {
+    signOut(auth);
+  };
 
   const resimYukle = (e) => {
     const dosya = e.target.files[0];
@@ -141,8 +158,6 @@ export default function App() {
     } else {
       setTarifler([...tarifler, { ...eklenecekTarif, id: Date.now().toString() }]);
     }
-    
-    // İşlem bittikten sonra sadece formu temizliyoruz, başka sekmeye atlama YOK
     setYeniTarif({ ad: '', kategori: 'Ana Yemek', resim: '', malzemeler: [{ miktar: '', birim: 'gr', isim: '' }], hazirlanis: [''] });
   };
 
@@ -172,14 +187,11 @@ export default function App() {
     if(!yeniMenu.ad || yeniMenu.tarifler.length === 0) {
       setModal({ acik: true, tip: 'uyari', mesaj: 'Lütfen menü adı girin ve en az 1 tarif seçin!' }); return;
     }
-    
     if (yeniMenu.id) {
       setMenuler(menuler.map(m => m.id === yeniMenu.id ? yeniMenu : m));
     } else {
       setMenuler([...menuler, { ...yeniMenu, id: Date.now().toString() }]);
     }
-    
-    // İşlem bittikten sonra formu temizliyoruz, sayfa değişimi YOK
     setYeniMenu({ ad: '', tarifler: [] });
   };
 
@@ -223,14 +235,24 @@ export default function App() {
   const navClickTarifler = () => { setAktifSekme('tarifler'); setDetayGosterilenTarif(null); setNeredenGeldi(null); };
   const navClickMenuler = () => { setAktifSekme('menuler'); setDetayMenu(null); setNeredenGeldi(null); };
 
+  // YÜKLENİYOR DURUMU
+  if (yukleniyor) {
+    return <div className="min-h-screen bg-orange-50 flex items-center justify-center text-orange-600 font-bold">Yükleniyor...</div>;
+  }
+
+  // KULLANICI YOKSA LOGİN EKRANINI GÖSTER
+  if (!kullanici) {
+    return <Login />;
+  }
+
+  // KULLANICI VARSA ANA UYGULAMAYI GÖSTER
   return (
     <div className="min-h-screen bg-orange-50 text-slate-800 font-sans pb-20 md:pb-6 print:pb-0 print:bg-white">
-      
       <nav className="bg-orange-600 text-white shadow-md print:hidden sticky top-0 z-10">
-        <div className="max-w-5xl mx-auto px-4 py-3 flex justify-center md:justify-between items-center">
+        <div className="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
           <div className="flex items-center space-x-2 font-bold text-xl">
             <ChefHat size={28} />
-            <span>Bizim Mutfak</span>
+            <span className="hidden sm:inline">Bizim Mutfak</span>
           </div>
           
           <div className="hidden md:flex space-x-1">
@@ -250,6 +272,10 @@ export default function App() {
               <Printer size={18} /> <span>Yazdır</span>
             </button>
           </div>
+
+          <button onClick={cikisYap} className="flex items-center space-x-1 bg-red-500 hover:bg-red-600 px-3 py-2 rounded-lg text-sm font-bold transition-colors shadow-sm">
+            <LogOut size={18} /> <span className="hidden sm:inline">Çıkış</span>
+          </button>
         </div>
       </nav>
 
@@ -287,7 +313,6 @@ export default function App() {
             {detayGosterilenTarif ? (
               <div className="bg-white rounded-xl shadow-md overflow-hidden pb-4">
                 <div className="bg-orange-100 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                  
                   <button 
                     onClick={() => {
                       setDetayGosterilenTarif(null);
@@ -301,7 +326,6 @@ export default function App() {
                     <ArrowLeft size={20} className="mr-1"/> 
                     {neredenGeldi === 'menuler' ? 'Menüye Dön' : 'Listeye Dön'}
                   </button>
-
                   <div className="flex items-center gap-3 w-full sm:w-auto justify-between">
                     <span className="bg-orange-200 text-orange-800 px-3 py-1 rounded-full text-sm font-semibold truncate">{detayGosterilenTarif.kategori}</span>
                   </div>
@@ -418,17 +442,6 @@ export default function App() {
                       )
                     })}
                   </div>
-                  <div className="mt-3 pt-2 border-t">
-                    <select className="w-full text-xs sm:text-sm p-2 sm:p-2.5 border rounded-lg bg-orange-50 text-orange-900 font-medium outline-none" onChange={(e) => { if(e.target.value) { planaEkle(gun, e.target.value); e.target.value = ""; } }} defaultValue="">
-                      <option value="" disabled>+ Yemek Ekle</option>
-                      {menuler.length > 0 && <optgroup label="🌟 Menülerim">{menuler.map(m => <option key={`m_${m.id}`} value={`menu_${m.id}`}>📦 {m.ad}</option>)}</optgroup>}
-                      {KATEGORILER.map(kat => {
-                        const katTarifleri = tarifler.filter(t => t.kategori === kat).sort((a,b)=> a.ad.localeCompare(b.ad));
-                        if(katTarifleri.length === 0) return null;
-                        return <optgroup label={`🍽 ${kat}`} key={kat}>{katTarifleri.map(t => <option key={`t_${t.id}`} value={`tarif_${t.id}`}>{t.ad}</option>)}</optgroup>
-                      })}
-                    </select>
-                  </div>
                 </div>
               ))}
             </div>
@@ -440,7 +453,6 @@ export default function App() {
             <div className="bg-white p-4 sm:p-6 rounded-xl shadow mb-6 print:hidden flex flex-col items-center gap-4 border border-slate-200">
               <div className="text-center">
                 <h2 className="text-xl font-bold text-slate-800">Menüyü Yazdır (PDF)</h2>
-                <p className="text-sm text-slate-500">Seçtiğiniz günü tek sayfalık A4 düzeninde oluşturun.</p>
               </div>
               <div className="w-full bg-slate-50 p-2 sm:p-3 rounded-lg border border-slate-100 overflow-x-auto no-scrollbar">
                 <div className="flex gap-2 min-w-max px-2">
@@ -452,66 +464,6 @@ export default function App() {
               <button onClick={() => window.print()} className="bg-blue-600 w-full sm:w-auto hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-bold flex items-center justify-center shadow-lg text-lg">
                 <Printer size={22} className="mr-2" /> PDF Olarak Kaydet
               </button>
-            </div>
-
-            <div className="bg-white p-4 sm:p-8 rounded-xl shadow-sm print:shadow-none print:rounded-none print-a4-page">
-              <div className="text-center mb-6 print:mb-2 border-b-4 border-slate-800 print:border-b-2 pb-4 print:pb-1 shrink-0">
-                <h1 className="text-3xl print:text-xl font-extrabold text-slate-900 mb-1 print:mb-0">Günün Menüsü</h1>
-                <p className="text-lg print:text-[11px] text-slate-600 font-bold">{yazdirilacakGun} <span className="font-medium">({gunTarihleri[yazdirilacakGun]})</span></p>
-              </div>
-
-              {(() => {
-                const gununTarifleri = haftalikPlan[yazdirilacakGun].map(id => tarifler.find(t => t.id === id)).filter(Boolean);
-                if (gununTarifleri.length === 0) return <div className="text-center py-20 text-slate-500 print:text-black"><p className="text-lg font-medium">{yazdirilacakGun} günü için plan yok.</p></div>;
-                const topluMalzemeler = getGunlukTopluMalzemeler(gununTarifleri);
-                const gridClass = gununTarifleri.length > 2 ? 'print:grid-cols-2' : 'print:grid-cols-1';
-
-                return (
-                  <div className="print-recipes-container">
-                    <div className={`grid grid-cols-1 ${gridClass} gap-6 print:gap-2 overflow-hidden`}>
-                      {gununTarifleri.map((tarif, i) => (
-                        <div key={i} className="pl-3 print:pl-2 border-l-4 print:border-l-2 border-orange-500 print:border-black bg-orange-50/40 print:bg-transparent p-3 print:p-1 rounded-r-lg print:rounded-none flex flex-col justify-start overflow-hidden">
-                          <h3 className="text-lg print:text-[12px] font-bold text-slate-900 flex justify-between items-center print:mb-1 border-b border-orange-100 print:border-slate-200 pb-1">
-                            <span>{tarif.ad}</span><span className="text-xs print:text-[9px] font-normal text-slate-500 print:text-slate-600 bg-white print:bg-transparent px-2 py-0.5 rounded border print:border-none">{tarif.kategori}</span>
-                          </h3>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 print:grid-cols-2 gap-4 print:gap-2 mt-2">
-                            <div className="print:text-[9px] text-sm">
-                              <h4 className="font-bold text-orange-800 print:text-black border-b border-orange-200 print:border-dashed pb-1 mb-1 print:mb-0.5 uppercase tracking-wider text-[10px] print:text-[8px]">Malzemeler</h4>
-                              <ul className="space-y-1 print:space-y-0 text-slate-700 print:text-black">
-                                {tarif.malzemeler.map((m, idx) => <li key={idx} className="flex justify-between border-b border-slate-100 print:border-none print:py-0"><span>{m.isim}</span><span className="font-semibold text-slate-900">{m.miktar} {m.birim}</span></li>)}
-                              </ul>
-                            </div>
-                            <div className="print:text-[9px] text-sm">
-                               <h4 className="font-bold text-slate-800 print:text-black border-b border-slate-200 print:border-dashed pb-1 mb-1 print:mb-0.5 uppercase tracking-wider text-[10px] print:text-[8px]">Hazırlanışı</h4>
-                               
-                               {Array.isArray(tarif.hazirlanis) ? (
-                                <ul className="space-y-1 text-slate-600 print:text-black leading-snug">
-                                  {tarif.hazirlanis.map((adim, idx) => adim.trim() && (
-                                    <li key={idx}><span className="font-bold">{idx+1}.</span> {adim}</li>
-                                  ))}
-                                </ul>
-                               ) : (
-                                <p className="text-slate-600 print:text-black whitespace-pre-wrap leading-snug">{tarif.hazirlanis || '-'}</p>
-                               )}
-
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="mt-8 print:mt-auto bg-orange-100/50 print:bg-transparent p-4 print:p-2 border print:border-t-2 print:border-x-0 print:border-b-0 border-orange-200 print:border-black rounded-xl print:rounded-none shrink-0">
-                      <h3 className="text-lg print:text-[11px] font-bold text-orange-900 print:text-black mb-3 print:mb-1 uppercase tracking-wider print:text-center">Toplam Alışveriş & Malzeme Listesi</h3>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 print:grid-cols-3 gap-x-6 gap-y-2 print:gap-x-4 print:gap-y-0.5 text-sm print:text-[9px]">
-                        {topluMalzemeler.map((item, idx) => (
-                          <div key={idx} className="flex justify-between items-center border-b border-dashed border-orange-200 print:border-slate-300 pb-1">
-                            <span className="text-slate-700 print:text-black font-medium">{item.isim}</span><span className="font-bold text-slate-900 print:text-black">{item.miktar > 0 ? item.miktar : ''} {item.birim}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })()}
             </div>
           </div>
         )}

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { 
   ChefHat, PlusCircle, CalendarDays, Printer, 
-  Trash2, Image as ImageIcon, Plus, X,
-  List, Layers, ShoppingCart, Check, Edit, ArrowLeft
+  Trash2, Image as ImageIcon, X,
+  List, Layers, ShoppingCart, Edit, ArrowLeft
 } from 'lucide-react';
 
 // BİLEŞENLERİ İÇERİ AKTARIYORUZ

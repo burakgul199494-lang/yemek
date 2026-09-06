@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   ChefHat, PlusCircle, CalendarDays, Printer, 
-  Image as ImageIcon, X, List, Layers, ShoppingCart, Edit, ArrowLeft, Search, Trash2
+  Image as ImageIcon, X, List, Layers, ShoppingCart, ArrowLeft, Search
 } from 'lucide-react';
 
 import YeniEkle from './components/YeniEkle';

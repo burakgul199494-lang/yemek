@@ -202,14 +202,7 @@ export default function App() {
     });
   };
 
-  const planaEkle = (gun, secim) => {
-    if(secim.startsWith('menu_')) {
-      const menu = menuler.find(m => m.id === secim.replace('menu_', ''));
-      if (menu) setHaftalikPlan({...haftalikPlan, [gun]: [...haftalikPlan[gun], ...menu.tarifler]});
-    } else if (secim.startsWith('tarif_')) {
-      setHaftalikPlan({...haftalikPlan, [gun]: [...haftalikPlan[gun], secim.replace('tarif_', '')]});
-    }
-  };
+
 
   const plandanCikar = (gun, index) => {
     const yeni = [...haftalikPlan[gun]];

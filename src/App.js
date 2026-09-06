@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   ChefHat, PlusCircle, CalendarDays, Printer, 
-  Image as ImageIcon, X, List, Layers, ShoppingCart, Edit, ArrowLeft
+  Image as ImageIcon, X, List, Layers, ShoppingCart, Edit, ArrowLeft, Search, Trash2
 } from 'lucide-react';
 
 import YeniEkle from './components/YeniEkle';
@@ -41,12 +41,11 @@ const ornekTarifler = [
       { miktar: '1', birim: 'adet', isim: 'Havuç' },
       { miktar: '1', birim: 'yemek kaşığı', isim: 'Domates Salçası' }
     ],
-    hazirlanis: "1. Tencereye sıvı yağı ve tavukları alın, kavurun.\n2. Salçayı ekleyip kokusu çıkana kadar kavurun.\n3. Havuç ve bezelyeleri ekleyin.\n4. Sıcak su ekleyip pişirin."
+    hazirlanis: ["Tencereye sıvı yağı ve tavukları alın, kavurun.", "Salçayı ekleyip kokusu çıkana kadar kavurun.", "Havuç ve bezelyeleri ekleyin.", "Sıcak su ekleyip pişirin."]
   }
 ];
 
 export default function App() {
-  // İlk açılış sekmesi artık 'ekle'
   const [aktifSekme, setAktifSekme] = useState('ekle'); 
   
   const haftaBilgisi = getHaftaTarihleri();
@@ -77,10 +76,13 @@ export default function App() {
   });
 
   const [seciliKategori, setSeciliKategori] = useState('Tümü');
+  const [tarifArama, setTarifArama] = useState('');
+  
   const [detayGosterilenTarif, setDetayGosterilenTarif] = useState(null);
   const [yeniMenu, setYeniMenu] = useState({ ad: '', tarifler: [] });
   const [modal, setModal] = useState({ acik: false, tip: '', mesaj: '', onOnay: null });
-  const [yeniTarif, setYeniTarif] = useState({ ad: '', kategori: 'Ana Yemek', resim: '', malzemeler: [{ miktar: '', birim: 'gr', isim: '' }], hazirlanis: '' });
+  // Hazırlanışı artık bir dizi (array)
+  const [yeniTarif, setYeniTarif] = useState({ ad: '', kategori: 'Ana Yemek', resim: '', malzemeler: [{ miktar: '', birim: 'gr', isim: '' }], hazirlanis: [''] });
 
   useEffect(() => localStorage.setItem('tarifler', JSON.stringify(tarifler)), [tarifler]);
   useEffect(() => {
@@ -108,13 +110,39 @@ export default function App() {
     sil: (index) => setYeniTarif({...yeniTarif, malzemeler: yeniTarif.malzemeler.filter((_, i) => i !== index)})
   };
 
+  // Hazırlanış adımlarını dizi olarak yönetmek için yeni fonksiyon objesi
+  const hazirlanisIslem = {
+    ekle: () => {
+      const arr = Array.isArray(yeniTarif.hazirlanis) ? yeniTarif.hazirlanis : (yeniTarif.hazirlanis ? yeniTarif.hazirlanis.split('\n') : []);
+      setYeniTarif({...yeniTarif, hazirlanis: [...arr, '']});
+    },
+    guncelle: (index, deger) => {
+      const arr = Array.isArray(yeniTarif.hazirlanis) ? [...yeniTarif.hazirlanis] : (yeniTarif.hazirlanis ? yeniTarif.hazirlanis.split('\n') : ['']);
+      arr[index] = deger;
+      setYeniTarif({ ...yeniTarif, hazirlanis: arr });
+    },
+    sil: (index) => {
+      const arr = Array.isArray(yeniTarif.hazirlanis) ? [...yeniTarif.hazirlanis] : (yeniTarif.hazirlanis ? yeniTarif.hazirlanis.split('\n') : ['']);
+      setYeniTarif({...yeniTarif, hazirlanis: arr.filter((_, i) => i !== index)});
+    }
+  };
+
   const tarifKaydet = (e) => {
     e.preventDefault();
     if (!yeniTarif.ad) return;
-    if (yeniTarif.id) setTarifler(tarifler.map(t => t.id === yeniTarif.id ? yeniTarif : t));
-    else setTarifler([...tarifler, { ...yeniTarif, id: Date.now().toString() }]);
     
-    setYeniTarif({ ad: '', kategori: 'Ana Yemek', resim: '', malzemeler: [{ miktar: '', birim: 'gr', isim: '' }], hazirlanis: '' });
+    // Boş hazırlanış adımlarını temizle
+    let temizHazirlanis = Array.isArray(yeniTarif.hazirlanis) 
+      ? yeniTarif.hazirlanis.filter(adim => adim.trim() !== '') 
+      : [];
+    if (temizHazirlanis.length === 0) temizHazirlanis = [''];
+
+    const eklenecekTarif = { ...yeniTarif, hazirlanis: temizHazirlanis };
+
+    if (yeniTarif.id) setTarifler(tarifler.map(t => t.id === yeniTarif.id ? eklenecekTarif : t));
+    else setTarifler([...tarifler, { ...eklenecekTarif, id: Date.now().toString() }]);
+    
+    setYeniTarif({ ad: '', kategori: 'Ana Yemek', resim: '', malzemeler: [{ miktar: '', birim: 'gr', isim: '' }], hazirlanis: [''] });
     setAktifSekme('tarifler');
     setDetayGosterilenTarif(null);
   };
@@ -199,7 +227,7 @@ export default function App() {
           </div>
           
           <div className="hidden md:flex space-x-1">
-            <button onClick={() => {setAktifSekme('ekle'); setYeniTarif({ ad: '', kategori: 'Ana Yemek', resim: '', malzemeler: [{ miktar: '', birim: 'gr', isim: '' }], hazirlanis: '' });}} className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm transition-colors ${aktifSekme === 'ekle' ? 'bg-orange-700' : 'hover:bg-orange-500'}`}>
+            <button onClick={() => {setAktifSekme('ekle'); setYeniTarif({ ad: '', kategori: 'Ana Yemek', resim: '', malzemeler: [{ miktar: '', birim: 'gr', isim: '' }], hazirlanis: [''] }); setYeniMenu({ ad: '', tarifler: [] });}} className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm transition-colors ${aktifSekme === 'ekle' ? 'bg-orange-700' : 'hover:bg-orange-500'}`}>
               <PlusCircle size={18} /> <span>Yönetim / Ekle</span>
             </button>
             <button onClick={() => {setAktifSekme('tarifler'); setDetayGosterilenTarif(null);}} className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm transition-colors ${aktifSekme === 'tarifler' ? 'bg-orange-700' : 'hover:bg-orange-500'}`}>
@@ -219,7 +247,7 @@ export default function App() {
       </nav>
 
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-[0_-5px_10px_rgba(0,0,0,0.05)] flex justify-between items-center px-1 py-2 z-50 pb-safe print:hidden">
-        <button onClick={() => {setAktifSekme('ekle'); setYeniTarif({ ad: '', kategori: 'Ana Yemek', resim: '', malzemeler: [{ miktar: '', birim: 'gr', isim: '' }], hazirlanis: '' });}} className={`flex-1 flex flex-col items-center p-2 rounded-lg text-[10px] ${aktifSekme === 'ekle' ? 'text-orange-600 font-bold' : 'text-slate-500 hover:text-orange-500'}`}>
+        <button onClick={() => {setAktifSekme('ekle'); setYeniTarif({ ad: '', kategori: 'Ana Yemek', resim: '', malzemeler: [{ miktar: '', birim: 'gr', isim: '' }], hazirlanis: [''] }); setYeniMenu({ ad: '', tarifler: [] });}} className={`flex-1 flex flex-col items-center p-2 rounded-lg text-[10px] ${aktifSekme === 'ekle' ? 'text-orange-600 font-bold' : 'text-slate-500 hover:text-orange-500'}`}>
           <PlusCircle size={22} className="mb-1" /> Yönetim
         </button>
         <button onClick={() => {setAktifSekme('tarifler'); setDetayGosterilenTarif(null);}} className={`flex-1 flex flex-col items-center p-2 rounded-lg text-[10px] ${aktifSekme === 'tarifler' ? 'text-orange-600 font-bold' : 'text-slate-500 hover:text-orange-500'}`}>
@@ -238,17 +266,15 @@ export default function App() {
 
       <main className="max-w-5xl mx-auto p-4 sm:p-6 print:p-0 print:max-w-none">
         
-        {/* YENİ EKLE / YÖNETİM */}
         {aktifSekme === 'ekle' && (
           <YeniEkle 
             yeniTarif={yeniTarif} setYeniTarif={setYeniTarif} yeniMenu={yeniMenu} setYeniMenu={setYeniMenu}
             tarifler={tarifler} menuler={menuler} tarifKaydet={tarifKaydet} menuKaydet={menuKaydet}
-            KATEGORILER={KATEGORILER} BIRIMLER={BIRIMLER} malzemeIslem={malzemeIslem} 
+            KATEGORILER={KATEGORILER} BIRIMLER={BIRIMLER} malzemeIslem={malzemeIslem} hazirlanisIslem={hazirlanisIslem}
             resimYukle={resimYukle} menuTarifToggle={menuTarifToggle} tarifSil={tarifSil} menuSil={menuSil}
           />
         )}
 
-        {/* TARİFLER (Silme Butonu Kaldırıldı) */}
         {aktifSekme === 'tarifler' && (
           <div className="animate-in fade-in duration-300">
             {detayGosterilenTarif ? (
@@ -259,9 +285,6 @@ export default function App() {
                   </button>
                   <div className="flex items-center gap-3 w-full sm:w-auto justify-between">
                     <span className="bg-orange-200 text-orange-800 px-3 py-1 rounded-full text-sm font-semibold truncate">{detayGosterilenTarif.kategori}</span>
-                    <button onClick={() => {setYeniTarif(detayGosterilenTarif); setAktifSekme('ekle');}} className="flex items-center bg-white text-blue-600 px-4 py-2 rounded-full text-sm font-bold shadow-sm">
-                      <Edit size={16} className="mr-1"/> Düzenle
-                    </button>
                   </div>
                 </div>
                 {detayGosterilenTarif.resim && <div className="w-full h-48 sm:h-64 bg-slate-200"><img src={detayGosterilenTarif.resim} alt={detayGosterilenTarif.ad} className="w-full h-full object-cover" /></div>}
@@ -279,7 +302,20 @@ export default function App() {
                     </div>
                     <div className="md:col-span-2">
                       <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center"><ChefHat className="mr-2" size={20}/> Hazırlanışı</h3>
-                      <div className="text-sm sm:text-base text-slate-700 leading-relaxed whitespace-pre-wrap bg-white p-4 rounded-xl border border-slate-100 shadow-sm">{detayGosterilenTarif.hazirlanis || "-"}</div>
+                      <div className="text-sm sm:text-base text-slate-700 leading-relaxed bg-white p-5 rounded-xl border border-slate-100 shadow-sm">
+                        {Array.isArray(detayGosterilenTarif.hazirlanis) ? (
+                          <ul className="space-y-3">
+                            {detayGosterilenTarif.hazirlanis.map((adim, i) => adim.trim() && (
+                              <li key={i} className="flex gap-3">
+                                <span className="font-bold text-orange-600">{i+1}.</span>
+                                <span className="flex-1">{adim}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="whitespace-pre-wrap">{detayGosterilenTarif.hazirlanis || "-"}</p>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -288,15 +324,27 @@ export default function App() {
               <>
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3 border-b-2 border-orange-200 pb-3">
                   <h2 className="text-xl sm:text-2xl font-bold text-orange-800">Tarif Defterim</h2>
-                  <select value={seciliKategori} onChange={(e) => setSeciliKategori(e.target.value)} className="w-full sm:w-auto p-2 sm:p-2.5 border border-orange-300 rounded-lg text-slate-700 bg-white shadow-sm outline-none">
-                    <option value="Tümü">Tüm Kategoriler</option>
-                    {KATEGORILER.map(k => <option key={k} value={k}>{k}</option>)}
-                  </select>
+                  
+                  {/* Arama ve Filtreleme Bölümü */}
+                  <div className="flex w-full sm:w-auto gap-2">
+                    <div className="relative flex-1 sm:w-48">
+                      <Search size={16} className="absolute left-3 top-2.5 text-slate-400" />
+                      <input type="text" placeholder="Yemek Ara..." value={tarifArama} onChange={(e) => setTarifArama(e.target.value)} className="w-full pl-9 p-2 border border-orange-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-orange-500" />
+                    </div>
+                    <select value={seciliKategori} onChange={(e) => setSeciliKategori(e.target.value)} className="w-1/2 sm:w-32 p-2 border border-orange-300 rounded-lg text-slate-700 bg-white shadow-sm outline-none text-sm">
+                      <option value="Tümü">Kategoriler</option>
+                      {KATEGORILER.map(k => <option key={k} value={k}>{k}</option>)}
+                    </select>
+                  </div>
                 </div>
+
                 <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-8">
                   {tarifler.length === 0 ? <div className="text-center py-12 text-slate-500">Henüz hiç tarifiniz yok.</div> : (
                     <div className="divide-y divide-slate-100">
-                      {tarifler.filter(t => seciliKategori === 'Tümü' || t.kategori === seciliKategori).sort((a, b) => a.ad.localeCompare(b.ad)).map(tarif => (
+                      {tarifler
+                        .filter(t => (seciliKategori === 'Tümü' || t.kategori === seciliKategori) && t.ad.toLowerCase().includes(tarifArama.toLowerCase()))
+                        .sort((a, b) => a.ad.localeCompare(b.ad))
+                        .map(tarif => (
                         <div key={tarif.id} onClick={() => setDetayGosterilenTarif(tarif)} className="flex items-center p-3 hover:bg-orange-50 cursor-pointer transition-colors group">
                           <div className="w-16 h-16 flex-shrink-0 bg-orange-100 rounded-lg overflow-hidden mr-3">
                             {tarif.resim ? <img src={tarif.resim} alt={tarif.ad} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-orange-300"><ImageIcon size={20} /></div>}
@@ -315,10 +363,14 @@ export default function App() {
           </div>
         )}
 
-        {/* MENÜLER */}
-        {aktifSekme === 'menuler' && <Menulerim menuler={menuler} tarifler={tarifler} getGunlukTopluMalzemeler={getGunlukTopluMalzemeler} />}
+        {aktifSekme === 'menuler' && (
+          <Menulerim 
+            menuler={menuler} tarifler={tarifler} getGunlukTopluMalzemeler={getGunlukTopluMalzemeler} 
+            setAktifSekme={setAktifSekme} setDetayGosterilenTarif={setDetayGosterilenTarif} 
+          />
+        )}
 
-        {/* PLAN */}
+        {/* ... (Plan ve Yazdır sekmeleri kodları öncekiyle tamamen aynıdır, değiştirmene gerek yok) ... */}
         {aktifSekme === 'plan' && (
           <div className="animate-in fade-in duration-300 mb-8">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 border-b-2 border-orange-200 pb-3 gap-2">
@@ -366,7 +418,6 @@ export default function App() {
           </div>
         )}
 
-        {/* YAZDIR */}
         {aktifSekme === 'yazdir' && (
           <div className="animate-in fade-in duration-300 print:m-0 print:p-0">
             <div className="bg-white p-4 sm:p-6 rounded-xl shadow mb-6 print:hidden flex flex-col items-center gap-4 border border-slate-200">
@@ -415,7 +466,17 @@ export default function App() {
                             </div>
                             <div className="print:text-[9px] text-sm">
                                <h4 className="font-bold text-slate-800 print:text-black border-b border-slate-200 print:border-dashed pb-1 mb-1 print:mb-0.5 uppercase tracking-wider text-[10px] print:text-[8px]">Hazırlanışı</h4>
-                               <p className="text-slate-600 print:text-black whitespace-pre-wrap leading-snug">{tarif.hazirlanis || '-'}</p>
+                               
+                               {Array.isArray(tarif.hazirlanis) ? (
+                                <ul className="space-y-1 text-slate-600 print:text-black leading-snug">
+                                  {tarif.hazirlanis.map((adim, idx) => adim.trim() && (
+                                    <li key={idx}><span className="font-bold">{idx+1}.</span> {adim}</li>
+                                  ))}
+                                </ul>
+                               ) : (
+                                <p className="text-slate-600 print:text-black whitespace-pre-wrap leading-snug">{tarif.hazirlanis || '-'}</p>
+                               )}
+
                             </div>
                           </div>
                         </div>

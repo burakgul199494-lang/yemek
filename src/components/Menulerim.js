@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import { ArrowLeft, ShoppingCart, ChefHat, Trash2, Check } from 'lucide-react';
+import { ArrowLeft, ShoppingCart, ChefHat, Check } from 'lucide-react';
 
-export default function Menulerim({ menuler, tarifler, menuSil, getGunlukTopluMalzemeler }) {
+export default function Menulerim({ menuler, tarifler, getGunlukTopluMalzemeler }) {
   const [detayMenu, setDetayMenu] = useState(null);
 
   if (detayMenu) {
-    // Menüdeki tariflerin detaylarını bul
     const menuTarifleri = detayMenu.tarifler.map(id => tarifler.find(t => t.id === id)).filter(Boolean);
     const alisverisListesi = getGunlukTopluMalzemeler(menuTarifleri);
 
@@ -18,7 +17,6 @@ export default function Menulerim({ menuler, tarifler, menuSil, getGunlukTopluMa
         <h2 className="text-2xl font-extrabold text-slate-800 mb-6 border-b-2 border-orange-200 pb-2">{detayMenu.ad}</h2>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Sol Kolon: Akıllı Market Listesi */}
           <div className="bg-orange-50 p-5 rounded-xl border border-orange-200 shadow-sm h-fit">
             <h3 className="text-lg font-bold text-orange-800 mb-4 flex items-center border-b border-orange-200 pb-2">
               <ShoppingCart className="mr-2" size={20}/> Toplu İhtiyaç Listesi
@@ -33,7 +31,6 @@ export default function Menulerim({ menuler, tarifler, menuSil, getGunlukTopluMa
             </ul>
           </div>
 
-          {/* Sağ Kolon: Yemekler ve Yapılışları */}
           <div className="md:col-span-2 space-y-6">
             {menuTarifleri.map(tarif => (
               <div key={tarif.id} className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
@@ -71,12 +68,6 @@ export default function Menulerim({ menuler, tarifler, menuSil, getGunlukTopluMa
                   ) : null;
                 })}
               </div>
-              <button 
-                onClick={(e) => { e.stopPropagation(); menuSil(menu.id); }} 
-                className="absolute top-4 right-4 p-2 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                <Trash2 size={18} />
-              </button>
             </div>
           ))
         )}

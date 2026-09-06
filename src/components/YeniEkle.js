@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, X, Layers, ChefHat } from 'lucide-react';
+import { Layers, ChefHat } from 'lucide-react';
 
 export default function YeniEkle({ tarifler, tarifKaydet, menuKaydet, KATEGORILER, BIRIMLER }) {
   const [islemTipi, setIslemTipi] = useState('tarif'); // 'tarif' veya 'menu'

@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { ArrowLeft, ShoppingCart, ChefHat, Check } from 'lucide-react';
 
-export default function Menulerim({ menuler, tarifler, getGunlukTopluMalzemeler, setAktifSekme, setDetayGosterilenTarif }) {
-  const [detayMenu, setDetayMenu] = useState(null);
+export default function Menulerim({ 
+  menuler, tarifler, getGunlukTopluMalzemeler, 
+  setAktifSekme, setDetayGosterilenTarif,
+  detayMenu, setDetayMenu, setNeredenGeldi 
+}) {
 
   if (detayMenu) {
     const menuTarifleri = detayMenu.tarifler.map(id => tarifler.find(t => t.id === id)).filter(Boolean);
@@ -35,7 +38,11 @@ export default function Menulerim({ menuler, tarifler, getGunlukTopluMalzemeler,
             {menuTarifleri.map(tarif => (
               <div 
                 key={tarif.id} 
-                onClick={() => { setDetayGosterilenTarif(tarif); setAktifSekme('tarifler'); }}
+                onClick={() => { 
+                  setDetayGosterilenTarif(tarif); 
+                  setNeredenGeldi('menuler'); // Geldiğimiz yeri hafızaya alıyoruz
+                  setAktifSekme('tarifler'); 
+                }}
                 className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm cursor-pointer hover:border-orange-400 hover:shadow-md transition-all group"
                 title="Tarif detayını gör"
               >

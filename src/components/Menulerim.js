@@ -1,21 +1,43 @@
-import React from 'react';
-import { ArrowLeft, ShoppingCart, ChefHat, Check } from 'lucide-react';
+import React, { useState } from 'react';
+import { ArrowLeft, ShoppingCart, ChefHat, Check, Calendar } from 'lucide-react';
 
 export default function Menulerim({ 
   menuler, tarifler, getGunlukTopluMalzemeler, 
   setAktifSekme, setDetayGosterilenTarif,
-  detayMenu, setDetayMenu, setNeredenGeldi 
+  detayMenu, setDetayMenu, setNeredenGeldi,
+  tariheMenuEkle 
 }) {
+  const [planTarihSecildi, setPlanTarihSecildi] = useState('');
+  const [planModalAcik, setPlanModalAcik] = useState(false);
 
   if (detayMenu) {
     const menuTarifleri = detayMenu.tarifler.map(id => tarifler.find(t => t.id === id)).filter(Boolean);
     const alisverisListesi = getGunlukTopluMalzemeler(menuTarifleri);
 
+    const takvimeIsle = (e) => {
+      e.preventDefault();
+      if (!planTarihSecildi) return;
+      tariheMenuEkle(planTarihSecildi, detayMenu);
+      setPlanModalAcik(false);
+      setPlanTarihSecildi('');
+      alert(`"${detayMenu.ad}" menüsü ${planTarihSecildi} tarihine başarıyla planlandı!`);
+    };
+
     return (
       <div className="animate-in fade-in duration-300">
-        <button onClick={() => setDetayMenu(null)} className="flex items-center text-orange-800 hover:text-orange-600 font-bold mb-4">
-          <ArrowLeft size={20} className="mr-2"/> Menülere Dön
-        </button>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
+          <button onClick={() => setDetayMenu(null)} className="flex items-center text-orange-800 hover:text-orange-600 font-bold">
+            <ArrowLeft size={20} className="mr-2"/> Menülere Dön
+          </button>
+          
+          {/* Takvime Planla Butonu */}
+          <button 
+            onClick={() => setPlanModalAcik(true)} 
+            className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-xl font-bold flex items-center shadow-sm text-sm"
+          >
+            <Calendar size={18} className="mr-2" /> Takvime Planla
+          </button>
+        </div>
         
         <h2 className="text-2xl font-extrabold text-slate-800 mb-6 border-b-2 border-orange-200 pb-2">{detayMenu.ad}</h2>
         
@@ -34,36 +56,53 @@ export default function Menulerim({
             </ul>
           </div>
 
-          <div className="md:col-span-2 space-y-6">
+          <div className="md:col-span-2 space-y-4">
             {menuTarifleri.map(tarif => (
               <div 
                 key={tarif.id} 
                 onClick={() => { 
                   setDetayGosterilenTarif(tarif); 
-                  setNeredenGeldi('menuler'); // Geldiğimiz yeri hafızaya alıyoruz
+                  setNeredenGeldi('menuler'); 
                   setAktifSekme('tarifler'); 
                 }}
-                className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm cursor-pointer hover:border-orange-400 hover:shadow-md transition-all group"
-                title="Tarif detayını gör"
+                className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm cursor-pointer hover:border-orange-400 hover:shadow-md transition-all flex justify-between items-center group"
               >
-                <h3 className="text-xl font-bold text-slate-800 mb-3 flex items-center group-hover:text-orange-600 transition-colors">
-                  <ChefHat className="mr-2 text-orange-500" size={22}/> {tarif.ad}
-                </h3>
-                <div className="bg-slate-50 p-4 rounded-lg text-slate-700 text-sm leading-relaxed border border-slate-100">
-                  {Array.isArray(tarif.hazirlanis) ? (
-                    <ul className="space-y-1">
-                      {tarif.hazirlanis.map((adim, i) => adim.trim() && (
-                        <li key={i}><span className="font-bold text-orange-600">{i+1}.</span> {adim}</li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="whitespace-pre-wrap">{tarif.hazirlanis || "Hazırlanış bilgisi girilmemiş."}</p>
-                  )}
+                <div>
+                  <h3 className="text-lg font-bold text-slate-800 group-hover:text-orange-600 transition-colors flex items-center">
+                    <ChefHat className="mr-2 text-orange-500" size={20}/> {tarif.ad}
+                  </h3>
+                  <span className="text-xs text-orange-700 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded-full font-medium inline-block mt-1">
+                    {tarif.kategori}
+                  </span>
                 </div>
+                <span className="text-xs text-blue-600 font-bold bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100">Tarifi Gör →</span>
               </div>
             ))}
           </div>
         </div>
+
+        {/* Planlama Tarih Seçim Modalı */}
+        {planModalAcik && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[110] p-4">
+            <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full">
+              <h3 className="text-lg font-bold text-slate-800 mb-3">Hangi Güne Planlansın?</h3>
+              <p className="text-xs text-slate-500 mb-4">İstediğin ileri bir tarihi veya haftayı seçebilirsin.</p>
+              <form onSubmit={takvimeIsle} className="space-y-4">
+                <input 
+                  type="date" 
+                  required 
+                  value={planTarihSecildi} 
+                  onChange={(e) => setPlanTarihSecildi(e.target.value)} 
+                  className="w-full p-3 border rounded-xl bg-slate-50 outline-none focus:ring-2 focus:ring-orange-500 font-medium"
+                />
+                <div className="flex justify-end gap-2">
+                  <button type="button" onClick={() => setPlanModalAcik(false)} className="px-4 py-2 bg-slate-100 rounded-xl font-bold text-slate-600 text-sm">İptal</button>
+                  <button type="submit" className="px-5 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-xl font-bold text-sm shadow-sm">Planı Kaydet</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -82,8 +121,9 @@ export default function Menulerim({
                 {menu.tarifler.map((tId, idx) => {
                   const t = tarifler.find(x => x.id === tId);
                   return t ? (
-                    <div key={idx} className="text-sm text-slate-600 flex items-center">
-                      <Check size={14} className="mr-2 text-green-500"/> {t.ad}
+                    <div key={idx} className="text-sm text-slate-600 flex items-center justify-between border-b border-slate-50 pb-1">
+                      <span>{t.ad}</span>
+                      <span className="text-[10px] text-orange-800 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded font-medium">({t.kategori})</span>
                     </div>
                   ) : null;
                 })}

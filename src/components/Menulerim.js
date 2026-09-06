@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ArrowLeft, ShoppingCart, ChefHat, Check } from 'lucide-react';
 
-export default function Menulerim({ menuler, tarifler, getGunlukTopluMalzemeler }) {
+export default function Menulerim({ menuler, tarifler, getGunlukTopluMalzemeler, setAktifSekme, setDetayGosterilenTarif }) {
   const [detayMenu, setDetayMenu] = useState(null);
 
   if (detayMenu) {
@@ -33,12 +33,25 @@ export default function Menulerim({ menuler, tarifler, getGunlukTopluMalzemeler 
 
           <div className="md:col-span-2 space-y-6">
             {menuTarifleri.map(tarif => (
-              <div key={tarif.id} className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                <h3 className="text-xl font-bold text-slate-800 mb-3 flex items-center">
+              <div 
+                key={tarif.id} 
+                onClick={() => { setDetayGosterilenTarif(tarif); setAktifSekme('tarifler'); }}
+                className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm cursor-pointer hover:border-orange-400 hover:shadow-md transition-all group"
+                title="Tarif detayını gör"
+              >
+                <h3 className="text-xl font-bold text-slate-800 mb-3 flex items-center group-hover:text-orange-600 transition-colors">
                   <ChefHat className="mr-2 text-orange-500" size={22}/> {tarif.ad}
                 </h3>
-                <div className="bg-slate-50 p-4 rounded-lg text-slate-700 whitespace-pre-wrap text-sm leading-relaxed border border-slate-100">
-                  {tarif.hazirlanis || "Hazırlanış bilgisi girilmemiş."}
+                <div className="bg-slate-50 p-4 rounded-lg text-slate-700 text-sm leading-relaxed border border-slate-100">
+                  {Array.isArray(tarif.hazirlanis) ? (
+                    <ul className="space-y-1">
+                      {tarif.hazirlanis.map((adim, i) => adim.trim() && (
+                        <li key={i}><span className="font-bold text-orange-600">{i+1}.</span> {adim}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="whitespace-pre-wrap">{tarif.hazirlanis || "Hazırlanış bilgisi girilmemiş."}</p>
+                  )}
                 </div>
               </div>
             ))}

@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { 
   ChefHat, PlusCircle, CalendarDays, Printer, 
-  Trash2, Image as ImageIcon, X,
-  List, Layers, ShoppingCart, Edit, ArrowLeft
+  Image as ImageIcon, X, List, Layers, ShoppingCart, Edit, ArrowLeft
 } from 'lucide-react';
 
-// BİLEŞENLERİ İÇERİ AKTARIYORUZ
 import YeniEkle from './components/YeniEkle';
 import Menulerim from './components/Menulerim';
 
@@ -48,7 +46,8 @@ const ornekTarifler = [
 ];
 
 export default function App() {
-  const [aktifSekme, setAktifSekme] = useState('tarifler'); 
+  // İlk açılış sekmesi artık 'ekle'
+  const [aktifSekme, setAktifSekme] = useState('ekle'); 
   
   const haftaBilgisi = getHaftaTarihleri();
   const gunTarihleri = haftaBilgisi.tarihler;
@@ -66,7 +65,6 @@ export default function App() {
   const [haftalikPlan, setHaftalikPlan] = useState(() => {
     const kayitli = localStorage.getItem('haftalikPlan');
     const kayitliHafta = localStorage.getItem('kayitliHafta');
-    
     if (kayitli && kayitliHafta === haftaBilgisi.pazartesiStr) {
       return JSON.parse(kayitli);
     }
@@ -75,20 +73,14 @@ export default function App() {
 
   const [yazdirilacakGun, setYazdirilacakGun] = useState(() => {
     const jsDay = new Date().getDay();
-    const index = jsDay === 0 ? 6 : jsDay - 1; 
-    return GUNLER[index];
+    return GUNLER[jsDay === 0 ? 6 : jsDay - 1];
   });
 
   const [seciliKategori, setSeciliKategori] = useState('Tümü');
   const [detayGosterilenTarif, setDetayGosterilenTarif] = useState(null);
-
   const [yeniMenu, setYeniMenu] = useState({ ad: '', tarifler: [] });
   const [modal, setModal] = useState({ acik: false, tip: '', mesaj: '', onOnay: null });
-
-  const [yeniTarif, setYeniTarif] = useState({
-    ad: '', kategori: 'Ana Yemek', resim: '',
-    malzemeler: [{ miktar: '', birim: 'gr', isim: '' }], hazirlanis: ''
-  });
+  const [yeniTarif, setYeniTarif] = useState({ ad: '', kategori: 'Ana Yemek', resim: '', malzemeler: [{ miktar: '', birim: 'gr', isim: '' }], hazirlanis: '' });
 
   useEffect(() => localStorage.setItem('tarifler', JSON.stringify(tarifler)), [tarifler]);
   useEffect(() => {
@@ -119,20 +111,15 @@ export default function App() {
   const tarifKaydet = (e) => {
     e.preventDefault();
     if (!yeniTarif.ad) return;
-
-    if (yeniTarif.id) {
-      setTarifler(tarifler.map(t => t.id === yeniTarif.id ? yeniTarif : t));
-    } else {
-      setTarifler([...tarifler, { ...yeniTarif, id: Date.now().toString() }]);
-    }
+    if (yeniTarif.id) setTarifler(tarifler.map(t => t.id === yeniTarif.id ? yeniTarif : t));
+    else setTarifler([...tarifler, { ...yeniTarif, id: Date.now().toString() }]);
     
     setYeniTarif({ ad: '', kategori: 'Ana Yemek', resim: '', malzemeler: [{ miktar: '', birim: 'gr', isim: '' }], hazirlanis: '' });
     setAktifSekme('tarifler');
     setDetayGosterilenTarif(null);
   };
 
-  const tarifSil = (id, e) => {
-    if(e) e.stopPropagation(); 
+  const tarifSil = (id) => {
     setModal({
       acik: true, tip: 'onay', mesaj: 'Bu tarifi silmek istediğinize emin misiniz?',
       onOnay: () => {
@@ -142,18 +129,15 @@ export default function App() {
           for(let gun in yeniPlan) yeniPlan[gun] = yeniPlan[gun].filter(tId => tId !== id);
           return yeniPlan;
         });
-        setMenuler(prevMenuler => prevMenuler.map(m => ({...m, tarifler: m.tarifler.filter(tId => tId !== id)})));
+        setMenuler(prev => prev.map(m => ({...m, tarifler: m.tarifler.filter(tId => tId !== id)})));
         if(detayGosterilenTarif?.id === id) setDetayGosterilenTarif(null);
       }
     });
   };
 
   const menuTarifToggle = (tarifId) => {
-    if(yeniMenu.tarifler.includes(tarifId)) {
-      setYeniMenu({...yeniMenu, tarifler: yeniMenu.tarifler.filter(id => id !== tarifId)});
-    } else {
-      setYeniMenu({...yeniMenu, tarifler: [...yeniMenu.tarifler, tarifId]});
-    }
+    if(yeniMenu.tarifler.includes(tarifId)) setYeniMenu({...yeniMenu, tarifler: yeniMenu.tarifler.filter(id => id !== tarifId)});
+    else setYeniMenu({...yeniMenu, tarifler: [...yeniMenu.tarifler, tarifId]});
   };
 
   const menuKaydet = (e) => {
@@ -161,13 +145,11 @@ export default function App() {
     if(!yeniMenu.ad || yeniMenu.tarifler.length === 0) {
       setModal({ acik: true, tip: 'uyari', mesaj: 'Lütfen menü adı girin ve en az 1 tarif seçin!' }); return;
     }
-    if (yeniMenu.id) {
-      setMenuler(menuler.map(m => m.id === yeniMenu.id ? yeniMenu : m));
-    } else {
-      setMenuler([...menuler, { ...yeniMenu, id: Date.now().toString() }]);
-    }
+    if (yeniMenu.id) setMenuler(menuler.map(m => m.id === yeniMenu.id ? yeniMenu : m));
+    else setMenuler([...menuler, { ...yeniMenu, id: Date.now().toString() }]);
+    
     setYeniMenu({ ad: '', tarifler: [] });
-    setAktifSekme('menuler'); // Menü kaydedilince Menüler sekmesine gitsin
+    setAktifSekme('menuler');
   };
 
   const menuSil = (id) => {
@@ -179,12 +161,10 @@ export default function App() {
 
   const planaEkle = (gun, secim) => {
     if(secim.startsWith('menu_')) {
-      const menuId = secim.replace('menu_', '');
-      const menu = menuler.find(m => m.id === menuId);
+      const menu = menuler.find(m => m.id === secim.replace('menu_', ''));
       if (menu) setHaftalikPlan({...haftalikPlan, [gun]: [...haftalikPlan[gun], ...menu.tarifler]});
     } else if (secim.startsWith('tarif_')) {
-      const tarifId = secim.replace('tarif_', '');
-      setHaftalikPlan({...haftalikPlan, [gun]: [...haftalikPlan[gun], tarifId]});
+      setHaftalikPlan({...haftalikPlan, [gun]: [...haftalikPlan[gun], secim.replace('tarif_', '')]});
     }
   };
 
@@ -200,12 +180,8 @@ export default function App() {
       if (!tarif) return;
       tarif.malzemeler.forEach(m => {
         if (!m.isim) return;
-        const temizIsim = m.isim.toLowerCase().trim();
-        const key = `${temizIsim}_${m.birim}`;
-        if (!liste[key]) {
-          const gorunenIsim = m.isim.charAt(0).toUpperCase() + m.isim.slice(1);
-          liste[key] = { isim: gorunenIsim, birim: m.birim, miktar: 0 };
-        }
+        const key = `${m.isim.toLowerCase().trim()}_${m.birim}`;
+        if (!liste[key]) liste[key] = { isim: m.isim.charAt(0).toUpperCase() + m.isim.slice(1), birim: m.birim, miktar: 0 };
         liste[key].miktar += Number(m.miktar) || 0;
       });
     });
@@ -215,7 +191,6 @@ export default function App() {
   return (
     <div className="min-h-screen bg-orange-50 text-slate-800 font-sans pb-20 md:pb-6 print:pb-0 print:bg-white">
       
-      {/* Üst Header */}
       <nav className="bg-orange-600 text-white shadow-md print:hidden sticky top-0 z-10">
         <div className="max-w-5xl mx-auto px-4 py-3 flex justify-center md:justify-between items-center">
           <div className="flex items-center space-x-2 font-bold text-xl">
@@ -224,11 +199,11 @@ export default function App() {
           </div>
           
           <div className="hidden md:flex space-x-1">
+            <button onClick={() => {setAktifSekme('ekle'); setYeniTarif({ ad: '', kategori: 'Ana Yemek', resim: '', malzemeler: [{ miktar: '', birim: 'gr', isim: '' }], hazirlanis: '' });}} className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm transition-colors ${aktifSekme === 'ekle' ? 'bg-orange-700' : 'hover:bg-orange-500'}`}>
+              <PlusCircle size={18} /> <span>Yönetim / Ekle</span>
+            </button>
             <button onClick={() => {setAktifSekme('tarifler'); setDetayGosterilenTarif(null);}} className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm transition-colors ${aktifSekme === 'tarifler' ? 'bg-orange-700' : 'hover:bg-orange-500'}`}>
               <List size={18} /> <span>Tariflerim</span>
-            </button>
-            <button onClick={() => {setAktifSekme('ekle'); setYeniTarif({ ad: '', kategori: 'Ana Yemek', resim: '', malzemeler: [{ miktar: '', birim: 'gr', isim: '' }], hazirlanis: '' });}} className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm transition-colors ${aktifSekme === 'ekle' ? 'bg-orange-700' : 'hover:bg-orange-500'}`}>
-              <PlusCircle size={18} /> <span>Yeni Ekle</span>
             </button>
             <button onClick={() => setAktifSekme('menuler')} className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm transition-colors ${aktifSekme === 'menuler' ? 'bg-orange-700' : 'hover:bg-orange-500'}`}>
               <Layers size={18} /> <span>Menülerim</span>
@@ -243,13 +218,12 @@ export default function App() {
         </div>
       </nav>
 
-      {/* MOBİL ALT NAVİGASYON */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-[0_-5px_10px_rgba(0,0,0,0.05)] flex justify-between items-center px-1 py-2 z-50 pb-safe print:hidden">
+        <button onClick={() => {setAktifSekme('ekle'); setYeniTarif({ ad: '', kategori: 'Ana Yemek', resim: '', malzemeler: [{ miktar: '', birim: 'gr', isim: '' }], hazirlanis: '' });}} className={`flex-1 flex flex-col items-center p-2 rounded-lg text-[10px] ${aktifSekme === 'ekle' ? 'text-orange-600 font-bold' : 'text-slate-500 hover:text-orange-500'}`}>
+          <PlusCircle size={22} className="mb-1" /> Yönetim
+        </button>
         <button onClick={() => {setAktifSekme('tarifler'); setDetayGosterilenTarif(null);}} className={`flex-1 flex flex-col items-center p-2 rounded-lg text-[10px] ${aktifSekme === 'tarifler' ? 'text-orange-600 font-bold' : 'text-slate-500 hover:text-orange-500'}`}>
           <List size={22} className="mb-1" /> Tariflerim
-        </button>
-        <button onClick={() => {setAktifSekme('ekle'); setYeniTarif({ ad: '', kategori: 'Ana Yemek', resim: '', malzemeler: [{ miktar: '', birim: 'gr', isim: '' }], hazirlanis: '' });}} className={`flex-1 flex flex-col items-center p-2 rounded-lg text-[10px] ${aktifSekme === 'ekle' ? 'text-orange-600 font-bold' : 'text-slate-500 hover:text-orange-500'}`}>
-          <PlusCircle size={22} className="mb-1" /> Ekle
         </button>
         <button onClick={() => setAktifSekme('menuler')} className={`flex-1 flex flex-col items-center p-2 rounded-lg text-[10px] ${aktifSekme === 'menuler' ? 'text-orange-600 font-bold' : 'text-slate-500 hover:text-orange-500'}`}>
           <Layers size={22} className="mb-1" /> Menüler
@@ -264,7 +238,17 @@ export default function App() {
 
       <main className="max-w-5xl mx-auto p-4 sm:p-6 print:p-0 print:max-w-none">
         
-        {/* === TARİFLER SEKME === */}
+        {/* YENİ EKLE / YÖNETİM */}
+        {aktifSekme === 'ekle' && (
+          <YeniEkle 
+            yeniTarif={yeniTarif} setYeniTarif={setYeniTarif} yeniMenu={yeniMenu} setYeniMenu={setYeniMenu}
+            tarifler={tarifler} menuler={menuler} tarifKaydet={tarifKaydet} menuKaydet={menuKaydet}
+            KATEGORILER={KATEGORILER} BIRIMLER={BIRIMLER} malzemeIslem={malzemeIslem} 
+            resimYukle={resimYukle} menuTarifToggle={menuTarifToggle} tarifSil={tarifSil} menuSil={menuSil}
+          />
+        )}
+
+        {/* TARİFLER (Silme Butonu Kaldırıldı) */}
         {aktifSekme === 'tarifler' && (
           <div className="animate-in fade-in duration-300">
             {detayGosterilenTarif ? (
@@ -274,45 +258,28 @@ export default function App() {
                     <ArrowLeft size={20} className="mr-1"/> Listeye Dön
                   </button>
                   <div className="flex items-center gap-3 w-full sm:w-auto justify-between">
-                    <span className="bg-orange-200 text-orange-800 px-3 py-1 rounded-full text-sm font-semibold truncate">
-                      {detayGosterilenTarif.kategori}
-                    </span>
+                    <span className="bg-orange-200 text-orange-800 px-3 py-1 rounded-full text-sm font-semibold truncate">{detayGosterilenTarif.kategori}</span>
                     <button onClick={() => {setYeniTarif(detayGosterilenTarif); setAktifSekme('ekle');}} className="flex items-center bg-white text-blue-600 px-4 py-2 rounded-full text-sm font-bold shadow-sm">
                       <Edit size={16} className="mr-1"/> Düzenle
                     </button>
                   </div>
                 </div>
-                
-                {detayGosterilenTarif.resim && (
-                  <div className="w-full h-48 sm:h-64 bg-slate-200">
-                    <img src={detayGosterilenTarif.resim} alt={detayGosterilenTarif.ad} className="w-full h-full object-cover" />
-                  </div>
-                )}
+                {detayGosterilenTarif.resim && <div className="w-full h-48 sm:h-64 bg-slate-200"><img src={detayGosterilenTarif.resim} alt={detayGosterilenTarif.ad} className="w-full h-full object-cover" /></div>}
                 
                 <div className="p-4 sm:p-8">
                   <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-6 border-b pb-4">{detayGosterilenTarif.ad}</h2>
-                  
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="md:col-span-1 bg-orange-50 p-4 rounded-xl border border-orange-100">
-                      <h3 className="text-lg font-bold text-orange-800 mb-4 flex items-center">
-                        <ShoppingCart className="mr-2" size={20}/> Malzemeler
-                      </h3>
+                      <h3 className="text-lg font-bold text-orange-800 mb-4 flex items-center"><ShoppingCart className="mr-2" size={20}/> Malzemeler</h3>
                       <ul className="space-y-3 text-sm sm:text-base">
                         {detayGosterilenTarif.malzemeler.map((m, i) => (
-                          <li key={i} className="flex items-start text-slate-700">
-                            <span className="text-orange-500 mr-2">•</span>
-                            <span><b className="font-semibold">{m.miktar} {m.birim}</b> {m.isim}</span>
-                          </li>
+                          <li key={i} className="flex items-start text-slate-700"><span className="text-orange-500 mr-2">•</span><span><b className="font-semibold">{m.miktar} {m.birim}</b> {m.isim}</span></li>
                         ))}
                       </ul>
                     </div>
                     <div className="md:col-span-2">
-                      <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center">
-                        <ChefHat className="mr-2" size={20}/> Hazırlanışı
-                      </h3>
-                      <div className="text-sm sm:text-base text-slate-700 leading-relaxed whitespace-pre-wrap bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
-                        {detayGosterilenTarif.hazirlanis || "Hazırlanış bilgisi girilmemiş."}
-                      </div>
+                      <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center"><ChefHat className="mr-2" size={20}/> Hazırlanışı</h3>
+                      <div className="text-sm sm:text-base text-slate-700 leading-relaxed whitespace-pre-wrap bg-white p-4 rounded-xl border border-slate-100 shadow-sm">{detayGosterilenTarif.hazirlanis || "-"}</div>
                     </div>
                   </div>
                 </div>
@@ -321,16 +288,13 @@ export default function App() {
               <>
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3 border-b-2 border-orange-200 pb-3">
                   <h2 className="text-xl sm:text-2xl font-bold text-orange-800">Tarif Defterim</h2>
-                  <select value={seciliKategori} onChange={(e) => setSeciliKategori(e.target.value)} className="w-full sm:w-auto p-2 sm:p-2.5 border border-orange-300 rounded-lg text-slate-700 bg-white shadow-sm focus:ring-2 focus:ring-orange-500 outline-none">
+                  <select value={seciliKategori} onChange={(e) => setSeciliKategori(e.target.value)} className="w-full sm:w-auto p-2 sm:p-2.5 border border-orange-300 rounded-lg text-slate-700 bg-white shadow-sm outline-none">
                     <option value="Tümü">Tüm Kategoriler</option>
                     {KATEGORILER.map(k => <option key={k} value={k}>{k}</option>)}
                   </select>
                 </div>
-
                 <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-8">
-                  {tarifler.length === 0 ? (
-                    <div className="text-center py-12 text-slate-500">Henüz hiç tarifiniz yok.</div>
-                  ) : (
+                  {tarifler.length === 0 ? <div className="text-center py-12 text-slate-500">Henüz hiç tarifiniz yok.</div> : (
                     <div className="divide-y divide-slate-100">
                       {tarifler.filter(t => seciliKategori === 'Tümü' || t.kategori === seciliKategori).sort((a, b) => a.ad.localeCompare(b.ad)).map(tarif => (
                         <div key={tarif.id} onClick={() => setDetayGosterilenTarif(tarif)} className="flex items-center p-3 hover:bg-orange-50 cursor-pointer transition-colors group">
@@ -341,9 +305,6 @@ export default function App() {
                             <h3 className="text-base sm:text-lg font-bold text-slate-800 truncate">{tarif.ad}</h3>
                             <p className="text-xs sm:text-sm text-slate-500">{tarif.kategori}</p>
                           </div>
-                          <button onClick={(e) => tarifSil(tarif.id, e)} className="p-2 sm:p-3 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors">
-                            <Trash2 size={20} />
-                          </button>
                         </div>
                       ))}
                     </div>
@@ -354,45 +315,23 @@ export default function App() {
           </div>
         )}
 
-        {/* === YENİ EKLE SEKME (Yeni Component) === */}
-        {aktifSekme === 'ekle' && (
-          <YeniEkle 
-            yeniTarif={yeniTarif} setYeniTarif={setYeniTarif}
-            yeniMenu={yeniMenu} setYeniMenu={setYeniMenu}
-            tarifler={tarifler} tarifKaydet={tarifKaydet} menuKaydet={menuKaydet}
-            KATEGORILER={KATEGORILER} BIRIMLER={BIRIMLER}
-            malzemeIslem={malzemeIslem} resimYukle={resimYukle} menuTarifToggle={menuTarifToggle}
-          />
-        )}
+        {/* MENÜLER */}
+        {aktifSekme === 'menuler' && <Menulerim menuler={menuler} tarifler={tarifler} getGunlukTopluMalzemeler={getGunlukTopluMalzemeler} />}
 
-        {/* === MENÜLER SEKME (Yeni Component) === */}
-        {aktifSekme === 'menuler' && (
-          <Menulerim 
-            menuler={menuler} 
-            tarifler={tarifler} 
-            menuSil={menuSil} 
-            getGunlukTopluMalzemeler={getGunlukTopluMalzemeler} 
-          />
-        )}
-
-        {/* === PLAN SEKME === */}
+        {/* PLAN */}
         {aktifSekme === 'plan' && (
           <div className="animate-in fade-in duration-300 mb-8">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 border-b-2 border-orange-200 pb-3 gap-2">
               <h2 className="text-xl sm:text-2xl font-bold text-orange-800">Haftalık Menü Planı</h2>
               <div className="text-xs sm:text-sm font-medium text-slate-600 bg-white px-3 py-2 rounded-lg shadow-sm border flex items-center w-full sm:w-auto">
-                <CalendarDays size={16} className="mr-2 text-orange-500" /> 
-                <span>Hafta: <b className="text-slate-800">{gunTarihleri['Pazartesi']} - {gunTarihleri['Pazar']}</b></span>
+                <CalendarDays size={16} className="mr-2 text-orange-500" /> <span>Hafta: <b className="text-slate-800">{gunTarihleri['Pazartesi']} - {gunTarihleri['Pazar']}</b></span>
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
               {GUNLER.map(gun => (
                 <div key={gun} className="bg-white rounded-xl shadow-sm border border-slate-200 p-3 sm:p-4 flex flex-col">
                   <h3 className="font-bold text-base sm:text-lg border-b pb-2 mb-2 sm:mb-3 text-slate-700 flex justify-between items-center">
-                    <div>
-                      <span className="block">{gun}</span>
-                      <span className="text-[10px] sm:text-xs font-normal text-slate-400">{gunTarihleri[gun]}</span>
-                    </div>
+                    <div><span className="block">{gun}</span><span className="text-[10px] sm:text-xs font-normal text-slate-400">{gunTarihleri[gun]}</span></div>
                     <span className="text-[10px] sm:text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full">{haftalikPlan[gun].length} Çeşit</span>
                   </h3>
                   <div className="space-y-2 flex-1 min-h-[80px]">
@@ -413,19 +352,11 @@ export default function App() {
                   <div className="mt-3 pt-2 border-t">
                     <select className="w-full text-xs sm:text-sm p-2 sm:p-2.5 border rounded-lg bg-orange-50 text-orange-900 font-medium outline-none" onChange={(e) => { if(e.target.value) { planaEkle(gun, e.target.value); e.target.value = ""; } }} defaultValue="">
                       <option value="" disabled>+ Yemek Ekle</option>
-                      {menuler.length > 0 && (
-                        <optgroup label="🌟 Menülerim">
-                          {menuler.map(m => <option key={`m_${m.id}`} value={`menu_${m.id}`}>📦 {m.ad}</option>)}
-                        </optgroup>
-                      )}
+                      {menuler.length > 0 && <optgroup label="🌟 Menülerim">{menuler.map(m => <option key={`m_${m.id}`} value={`menu_${m.id}`}>📦 {m.ad}</option>)}</optgroup>}
                       {KATEGORILER.map(kat => {
                         const katTarifleri = tarifler.filter(t => t.kategori === kat).sort((a,b)=> a.ad.localeCompare(b.ad));
                         if(katTarifleri.length === 0) return null;
-                        return (
-                          <optgroup label={`🍽 ${kat}`} key={kat}>
-                            {katTarifleri.map(t => <option key={`t_${t.id}`} value={`tarif_${t.id}`}>{t.ad}</option>)}
-                          </optgroup>
-                        )
+                        return <optgroup label={`🍽 ${kat}`} key={kat}>{katTarifleri.map(t => <option key={`t_${t.id}`} value={`tarif_${t.id}`}>{t.ad}</option>)}</optgroup>
                       })}
                     </select>
                   </div>
@@ -435,7 +366,7 @@ export default function App() {
           </div>
         )}
 
-        {/* === YAZDIR === */}
+        {/* YAZDIR */}
         {aktifSekme === 'yazdir' && (
           <div className="animate-in fade-in duration-300 print:m-0 print:p-0">
             <div className="bg-white p-4 sm:p-6 rounded-xl shadow mb-6 print:hidden flex flex-col items-center gap-4 border border-slate-200">
@@ -446,9 +377,7 @@ export default function App() {
               <div className="w-full bg-slate-50 p-2 sm:p-3 rounded-lg border border-slate-100 overflow-x-auto no-scrollbar">
                 <div className="flex gap-2 min-w-max px-2">
                   {GUNLER.map(g => (
-                    <button key={g} onClick={() => setYazdirilacakGun(g)} className={`px-4 py-2 rounded-lg border transition-colors text-sm font-bold shadow-sm ${yazdirilacakGun === g ? 'bg-orange-600 border-orange-600 text-white' : 'bg-white border-slate-200 text-slate-600 hover:bg-orange-50'}`}>
-                      {g}
-                    </button>
+                    <button key={g} onClick={() => setYazdirilacakGun(g)} className={`px-4 py-2 rounded-lg border transition-colors text-sm font-bold shadow-sm ${yazdirilacakGun === g ? 'bg-orange-600 border-orange-600 text-white' : 'bg-white border-slate-200 text-slate-600 hover:bg-orange-50'}`}>{g}</button>
                   ))}
                 </div>
               </div>
@@ -465,44 +394,25 @@ export default function App() {
 
               {(() => {
                 const gununTarifleri = haftalikPlan[yazdirilacakGun].map(id => tarifler.find(t => t.id === id)).filter(Boolean);
-                
-                if (gununTarifleri.length === 0) {
-                  return (
-                    <div className="text-center py-20 text-slate-500 print:text-black">
-                      <p className="text-lg font-medium">{yazdirilacakGun} günü için plan yok.</p>
-                    </div>
-                  );
-                }
-
+                if (gununTarifleri.length === 0) return <div className="text-center py-20 text-slate-500 print:text-black"><p className="text-lg font-medium">{yazdirilacakGun} günü için plan yok.</p></div>;
                 const topluMalzemeler = getGunlukTopluMalzemeler(gununTarifleri);
                 const gridClass = gununTarifleri.length > 2 ? 'print:grid-cols-2' : 'print:grid-cols-1';
 
                 return (
                   <div className="print-recipes-container">
-                    
                     <div className={`grid grid-cols-1 ${gridClass} gap-6 print:gap-2 overflow-hidden`}>
                       {gununTarifleri.map((tarif, i) => (
                         <div key={i} className="pl-3 print:pl-2 border-l-4 print:border-l-2 border-orange-500 print:border-black bg-orange-50/40 print:bg-transparent p-3 print:p-1 rounded-r-lg print:rounded-none flex flex-col justify-start overflow-hidden">
                           <h3 className="text-lg print:text-[12px] font-bold text-slate-900 flex justify-between items-center print:mb-1 border-b border-orange-100 print:border-slate-200 pb-1">
-                            <span>{tarif.ad}</span>
-                            <span className="text-xs print:text-[9px] font-normal text-slate-500 print:text-slate-600 bg-white print:bg-transparent px-2 py-0.5 rounded border print:border-none">
-                              {tarif.kategori}
-                            </span>
+                            <span>{tarif.ad}</span><span className="text-xs print:text-[9px] font-normal text-slate-500 print:text-slate-600 bg-white print:bg-transparent px-2 py-0.5 rounded border print:border-none">{tarif.kategori}</span>
                           </h3>
-                          
                           <div className="grid grid-cols-1 sm:grid-cols-2 print:grid-cols-2 gap-4 print:gap-2 mt-2">
                             <div className="print:text-[9px] text-sm">
                               <h4 className="font-bold text-orange-800 print:text-black border-b border-orange-200 print:border-dashed pb-1 mb-1 print:mb-0.5 uppercase tracking-wider text-[10px] print:text-[8px]">Malzemeler</h4>
                               <ul className="space-y-1 print:space-y-0 text-slate-700 print:text-black">
-                                {tarif.malzemeler.map((m, idx) => (
-                                  <li key={idx} className="flex justify-between border-b border-slate-100 print:border-none print:py-0">
-                                    <span>{m.isim}</span>
-                                    <span className="font-semibold text-slate-900">{m.miktar} {m.birim}</span>
-                                  </li>
-                                ))}
+                                {tarif.malzemeler.map((m, idx) => <li key={idx} className="flex justify-between border-b border-slate-100 print:border-none print:py-0"><span>{m.isim}</span><span className="font-semibold text-slate-900">{m.miktar} {m.birim}</span></li>)}
                               </ul>
                             </div>
-                            
                             <div className="print:text-[9px] text-sm">
                                <h4 className="font-bold text-slate-800 print:text-black border-b border-slate-200 print:border-dashed pb-1 mb-1 print:mb-0.5 uppercase tracking-wider text-[10px] print:text-[8px]">Hazırlanışı</h4>
                                <p className="text-slate-600 print:text-black whitespace-pre-wrap leading-snug">{tarif.hazirlanis || '-'}</p>
@@ -511,23 +421,16 @@ export default function App() {
                         </div>
                       ))}
                     </div>
-
                     <div className="mt-8 print:mt-auto bg-orange-100/50 print:bg-transparent p-4 print:p-2 border print:border-t-2 print:border-x-0 print:border-b-0 border-orange-200 print:border-black rounded-xl print:rounded-none shrink-0">
-                      <h3 className="text-lg print:text-[11px] font-bold text-orange-900 print:text-black mb-3 print:mb-1 uppercase tracking-wider print:text-center">
-                        Toplam Alışveriş & Malzeme Listesi
-                      </h3>
+                      <h3 className="text-lg print:text-[11px] font-bold text-orange-900 print:text-black mb-3 print:mb-1 uppercase tracking-wider print:text-center">Toplam Alışveriş & Malzeme Listesi</h3>
                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 print:grid-cols-3 gap-x-6 gap-y-2 print:gap-x-4 print:gap-y-0.5 text-sm print:text-[9px]">
                         {topluMalzemeler.map((item, idx) => (
                           <div key={idx} className="flex justify-between items-center border-b border-dashed border-orange-200 print:border-slate-300 pb-1">
-                            <span className="text-slate-700 print:text-black font-medium">{item.isim}</span>
-                            <span className="font-bold text-slate-900 print:text-black">
-                              {item.miktar > 0 ? item.miktar : ''} {item.birim}
-                            </span>
+                            <span className="text-slate-700 print:text-black font-medium">{item.isim}</span><span className="font-bold text-slate-900 print:text-black">{item.miktar > 0 ? item.miktar : ''} {item.birim}</span>
                           </div>
                         ))}
                       </div>
                     </div>
-
                   </div>
                 );
               })()}
@@ -536,19 +439,14 @@ export default function App() {
         )}
       </main>
 
-      {/* Silme / Uyarı Modalı */}
       {modal.acik && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4 print:hidden">
           <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full animate-in fade-in zoom-in duration-200">
-            <h3 className={`text-xl font-bold mb-3 ${modal.tip === 'uyari' ? 'text-orange-600' : 'text-red-600'}`}>
-              {modal.tip === 'uyari' ? 'Uyarı' : 'Emin misiniz?'}
-            </h3>
+            <h3 className={`text-xl font-bold mb-3 ${modal.tip === 'uyari' ? 'text-orange-600' : 'text-red-600'}`}>{modal.tip === 'uyari' ? 'Uyarı' : 'Emin misiniz?'}</h3>
             <p className="text-slate-600 mb-6">{modal.mesaj}</p>
             <div className="flex justify-end gap-3">
               {modal.tip === 'onay' && <button onClick={() => setModal({ ...modal, acik: false })} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg font-bold">İptal</button>}
-              <button onClick={() => { if(modal.onOnay) modal.onOnay(); setModal({ ...modal, acik: false }); }} className={`px-5 py-2 text-white rounded-lg font-bold shadow-sm ${modal.tip === 'uyari' ? 'bg-orange-600' : 'bg-red-600'}`}>
-                {modal.tip === 'uyari' ? 'Tamam' : 'Sil'}
-              </button>
+              <button onClick={() => { if(modal.onOnay) modal.onOnay(); setModal({ ...modal, acik: false }); }} className={`px-5 py-2 text-white rounded-lg font-bold shadow-sm ${modal.tip === 'uyari' ? 'bg-orange-600' : 'bg-red-600'}`}>{modal.tip === 'uyari' ? 'Tamam' : 'Sil'}</button>
             </div>
           </div>
         </div>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   ChefHat, PlusCircle, CalendarDays, Printer, 
-  Image as ImageIcon, X, List, Layers, ShoppingCart, Edit, ArrowLeft, Search
+  Image as ImageIcon, X, List, Layers, ShoppingCart, ArrowLeft, Search
 } from 'lucide-react';
 
 import YeniEkle from './components/YeniEkle';
@@ -75,7 +75,6 @@ export default function App() {
     return GUNLER[jsDay === 0 ? 6 : jsDay - 1];
   });
 
-  // HAFILZALARI BURAYA TAŞIDIK
   const [seciliKategori, setSeciliKategori] = useState('Tümü');
   const [tarifArama, setTarifArama] = useState('');
   const [detayGosterilenTarif, setDetayGosterilenTarif] = useState(null);
@@ -136,12 +135,15 @@ export default function App() {
     if (temizHazirlanis.length === 0) temizHazirlanis = [''];
 
     const eklenecekTarif = { ...yeniTarif, hazirlanis: temizHazirlanis };
-    if (yeniTarif.id) setTarifler(tarifler.map(t => t.id === yeniTarif.id ? eklenecekTarif : t));
-    else setTarifler([...tarifler, { ...eklenecekTarif, id: Date.now().toString() }]);
     
+    if (yeniTarif.id) {
+      setTarifler(tarifler.map(t => t.id === yeniTarif.id ? eklenecekTarif : t));
+    } else {
+      setTarifler([...tarifler, { ...eklenecekTarif, id: Date.now().toString() }]);
+    }
+    
+    // İşlem bittikten sonra sadece formu temizliyoruz, başka sekmeye atlama YOK
     setYeniTarif({ ad: '', kategori: 'Ana Yemek', resim: '', malzemeler: [{ miktar: '', birim: 'gr', isim: '' }], hazirlanis: [''] });
-    setAktifSekme('tarifler');
-    setDetayGosterilenTarif(null);
   };
 
   const tarifSil = (id) => {
@@ -170,11 +172,15 @@ export default function App() {
     if(!yeniMenu.ad || yeniMenu.tarifler.length === 0) {
       setModal({ acik: true, tip: 'uyari', mesaj: 'Lütfen menü adı girin ve en az 1 tarif seçin!' }); return;
     }
-    if (yeniMenu.id) setMenuler(menuler.map(m => m.id === yeniMenu.id ? yeniMenu : m));
-    else setMenuler([...menuler, { ...yeniMenu, id: Date.now().toString() }]);
     
+    if (yeniMenu.id) {
+      setMenuler(menuler.map(m => m.id === yeniMenu.id ? yeniMenu : m));
+    } else {
+      setMenuler([...menuler, { ...yeniMenu, id: Date.now().toString() }]);
+    }
+    
+    // İşlem bittikten sonra formu temizliyoruz, sayfa değişimi YOK
     setYeniMenu({ ad: '', tarifler: [] });
-    setAktifSekme('menuler');
   };
 
   const menuSil = (id) => {
@@ -213,7 +219,6 @@ export default function App() {
     return Object.values(liste).sort((a,b) => a.isim.localeCompare(b.isim));
   };
 
-  // Navigasyon tıklamalarında hafızaları temizleme fonskiyonları
   const navClickEkle = () => { setAktifSekme('ekle'); setYeniTarif({ ad: '', kategori: 'Ana Yemek', resim: '', malzemeler: [{ miktar: '', birim: 'gr', isim: '' }], hazirlanis: [''] }); setYeniMenu({ ad: '', tarifler: [] }); setDetayGosterilenTarif(null); setNeredenGeldi(null); };
   const navClickTarifler = () => { setAktifSekme('tarifler'); setDetayGosterilenTarif(null); setNeredenGeldi(null); };
   const navClickMenuler = () => { setAktifSekme('menuler'); setDetayMenu(null); setNeredenGeldi(null); };
@@ -283,13 +288,12 @@ export default function App() {
               <div className="bg-white rounded-xl shadow-md overflow-hidden pb-4">
                 <div className="bg-orange-100 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                   
-                  {/* GERİ DÖN BUTONU MANTIĞI BURADA DEĞİŞTİ */}
                   <button 
                     onClick={() => {
                       setDetayGosterilenTarif(null);
                       if (neredenGeldi === 'menuler') {
                         setAktifSekme('menuler');
-                        setNeredenGeldi(null); // Dönüş başarılı, hafızayı sıfırla
+                        setNeredenGeldi(null);
                       }
                     }} 
                     className="flex items-center text-orange-800 hover:text-orange-600 font-medium"
@@ -376,7 +380,6 @@ export default function App() {
           </div>
         )}
 
-        {/* MENULER PROPLARI GÜNCELLENDİ */}
         {aktifSekme === 'menuler' && (
           <Menulerim 
             menuler={menuler} tarifler={tarifler} getGunlukTopluMalzemeler={getGunlukTopluMalzemeler} 

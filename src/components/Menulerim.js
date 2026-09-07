@@ -41,12 +41,12 @@ export default function Menulerim({
         {!hizliPrintMenu && (
           <div className="print:hidden">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
-              <button onClick={() => setDetayMenu(null)} className="flex items-center text-orange-800 hover:text-orange-600 font-bold">
+              <button onClick={() => setDetayMenu(null)} className="flex items-center text-orange-800 md:hover:text-orange-600 font-bold">
                 <ArrowLeft size={20} className="mr-2"/> {genelMenuArama ? 'Aramaya Dön' : 'Geri Dön'}
               </button>
               <div className="flex gap-2">
-                <button onClick={() => window.print()} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-bold flex items-center shadow-sm text-sm"><Printer size={18} className="mr-2" /> PDF / Çıktı Al</button>
-                <button onClick={() => setPlanModaliIcinMenu(detayMenu)} className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-xl font-bold flex items-center shadow-sm text-sm"><Calendar size={18} className="mr-2" /> Takvime Planla</button>
+                <button onClick={() => window.print()} className="bg-blue-600 md:hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-bold flex items-center shadow-sm text-sm"><Printer size={18} className="mr-2" /> PDF / Çıktı Al</button>
+                <button onClick={() => setPlanModaliIcinMenu(detayMenu)} className="bg-orange-600 md:hover:bg-orange-700 text-white px-4 py-2 rounded-xl font-bold flex items-center shadow-sm text-sm"><Calendar size={18} className="mr-2" /> Takvime Planla</button>
               </div>
             </div>
             
@@ -79,7 +79,7 @@ export default function Menulerim({
                         <h3 className="text-xl font-bold text-slate-800 flex items-center"><ChefHat className="mr-2 text-orange-500" size={22}/> {tarif.ad}</h3>
                         <span className="text-xs text-orange-700 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded-full font-medium inline-block mt-2">{tarif.kategori}</span>
                       </div>
-                      <button onClick={() => { setDetayGosterilenTarif(tarif); setNeredenGeldi('menuler'); setAktifSekme('tarifler'); }} className="text-xs text-blue-600 font-bold bg-blue-50 hover:bg-blue-100 px-3 py-2 rounded-lg border border-blue-200 transition-colors shrink-0 ml-2 shadow-sm">
+                      <button onClick={() => { setDetayGosterilenTarif(tarif); setNeredenGeldi('menuler'); setAktifSekme('tarifler'); }} className="text-xs text-blue-600 font-bold bg-blue-50 md:hover:bg-blue-100 px-3 py-2 rounded-lg border border-blue-200 transition-colors shrink-0 ml-2 shadow-sm">
                         Tam Detayı Gör →
                       </button>
                     </div>
@@ -98,7 +98,7 @@ export default function Menulerim({
                                 <div className="flex-1">
                                   <p className="mt-0.5">{metin}</p>
                                   {resim && (
-                                    <button onClick={() => setAcikResim(resim)} className="mt-2 flex items-center gap-1 text-[11px] bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-100 border border-blue-100 font-bold transition-colors shadow-sm w-fit">
+                                    <button onClick={() => setAcikResim(resim)} className="mt-2 flex items-center gap-1 text-[11px] bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg md:hover:bg-blue-100 border border-blue-100 font-bold transition-colors shadow-sm w-fit">
                                       <ImageIcon size={14} /> Fotoğrafı Aç
                                     </button>
                                   )}
@@ -166,11 +166,10 @@ export default function Menulerim({
             <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm relative animate-in zoom-in-95 duration-200">
               <h3 className="text-lg font-bold text-slate-800 mb-3">Bu Menü Hangi Güne Eklensin?</h3>
               <form onSubmit={takvimeIsle} className="space-y-4">
-                {/* YENİ: Modal Tarih Kutusu iOS Görünümü Düzeltildi */}
                 <input type="date" required value={planTarihSecildi} onChange={(e) => setPlanTarihSecildi(e.target.value)} className="w-full p-3 border rounded-xl bg-slate-50 outline-none focus:ring-2 focus:ring-orange-500 font-medium min-h-[50px] block appearance-none text-slate-800" />
                 <div className="flex justify-end gap-2">
                   <button type="button" onClick={() => setPlanModaliIcinMenu(null)} className="px-4 py-2 bg-slate-100 rounded-xl font-bold text-slate-600 text-sm">İptal</button>
-                  <button type="submit" className="px-5 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-xl font-bold text-sm shadow-sm">Plana Ekle</button>
+                  <button type="submit" className="px-5 py-2 bg-orange-600 md:hover:bg-orange-700 text-white rounded-xl font-bold text-sm shadow-sm">Plana Ekle</button>
                 </div>
               </form>
             </div>
@@ -187,10 +186,10 @@ export default function Menulerim({
         {menulerListesi.map(menu => {
           const icerik = menu.tarifler.map(tId => tarifler.find(x => x.id === tId)?.ad).filter(Boolean).join(', ');
           return (
-            <div key={menu.id} onClick={() => setDetayMenu(menu)} className="flex flex-col sm:flex-row justify-between sm:items-center p-3 hover:bg-orange-50 cursor-pointer transition-colors group border-b border-slate-50 last:border-0 gap-3">
+            <div key={menu.id} onClick={() => setDetayMenu(menu)} className="flex flex-col sm:flex-row justify-between sm:items-center p-3 md:hover:bg-orange-50 cursor-pointer transition-colors group border-b border-slate-50 last:border-0 gap-3">
               <div className="flex items-center flex-1 min-w-0 pr-2">
-                <div className="w-14 h-14 sm:w-16 sm:h-16 flex-shrink-0 bg-orange-100 rounded-lg overflow-hidden flex items-center justify-center mr-3 sm:mr-4 group-hover:bg-orange-500 transition-colors">
-                  {menu.resim ? <img src={menu.resim} alt={menu.ad} className="w-full h-full object-cover" /> : <Layers size={24} className="text-orange-500 group-hover:text-white transition-colors" />}
+                <div className="w-14 h-14 sm:w-16 sm:h-16 flex-shrink-0 bg-orange-100 rounded-lg overflow-hidden flex items-center justify-center mr-3 sm:mr-4 md:group-hover:bg-orange-500 transition-colors">
+                  {menu.resim ? <img src={menu.resim} alt={menu.ad} className="w-full h-full object-cover" /> : <Layers size={24} className="text-orange-500 md:group-hover:text-white transition-colors" />}
                 </div>
                 <div className="flex flex-col items-start truncate">
                   <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 w-full">
@@ -202,8 +201,8 @@ export default function Menulerim({
                 </div>
               </div>
               <div className="w-full sm:w-auto flex justify-end gap-2 shrink-0">
-                <button onClick={(e) => { e.stopPropagation(); setHizliPrintMenu(menu); }} className="text-xs bg-blue-50 text-blue-600 border border-blue-100 hover:bg-blue-600 hover:text-white px-3 py-1.5 rounded-lg transition-colors font-bold flex items-center shadow-sm w-full sm:w-auto justify-center"><Printer size={14} className="mr-1"/> PDF</button>
-                <button onClick={(e) => { e.stopPropagation(); setPlanModaliIcinMenu(menu); }} className="text-xs bg-orange-100 text-orange-700 hover:bg-orange-600 hover:text-white px-3 py-1.5 rounded-lg transition-colors font-bold flex items-center shadow-sm w-full sm:w-auto justify-center"><Calendar size={14} className="mr-1"/> Planla</button>
+                <button onClick={(e) => { e.stopPropagation(); setHizliPrintMenu(menu); }} className="text-xs bg-blue-50 text-blue-600 border border-blue-100 md:hover:bg-blue-600 md:hover:text-white px-3 py-1.5 rounded-lg transition-colors font-bold flex items-center shadow-sm w-full sm:w-auto justify-center"><Printer size={14} className="mr-1"/> PDF</button>
+                <button onClick={(e) => { e.stopPropagation(); setPlanModaliIcinMenu(menu); }} className="text-xs bg-orange-100 text-orange-700 md:hover:bg-orange-600 md:hover:text-white px-3 py-1.5 rounded-lg transition-colors font-bold flex items-center shadow-sm w-full sm:w-auto justify-center"><Calendar size={14} className="mr-1"/> Planla</button>
               </div>
             </div>
           );
@@ -224,13 +223,13 @@ export default function Menulerim({
     return (
       <div className="animate-in fade-in duration-300">
         <div className="flex justify-between items-center mb-6 bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-          <button onClick={() => setMenuKlasoru(null)} className="flex items-center text-orange-800 hover:text-orange-600 font-bold"><ArrowLeft size={20} className="mr-2"/> Kategorilere Dön</button>
+          <button onClick={() => setMenuKlasoru(null)} className="flex items-center text-orange-800 md:hover:text-orange-600 font-bold"><ArrowLeft size={20} className="mr-2"/> Kategorilere Dön</button>
           <span className="font-bold text-slate-700 bg-slate-100 px-4 py-2 rounded-lg flex items-center"><Folder size={18} className="mr-2 text-orange-500"/> {menuKlasoru} Kategorisi</span>
         </div>
         <div className="relative mb-6">
           <Search size={20} className="absolute left-4 top-3.5 text-slate-400" />
           <input type="text" placeholder={`"${menuKlasoru}" içinde menü veya yemek ara...`} value={menuArama} onChange={(e) => setMenuArama(e.target.value)} className="w-full pl-12 pr-9 p-3 border border-orange-200 rounded-xl outline-none focus:ring-2 focus:ring-orange-500 shadow-sm text-base" />
-          {menuArama && <button onClick={() => setMenuArama('')} className="absolute right-4 top-3.5 text-slate-400 hover:text-red-500 transition-colors"><X size={20}/></button>}
+          {menuArama && <button onClick={() => setMenuArama('')} className="absolute right-4 top-3.5 text-slate-400 md:hover:text-red-500 transition-colors"><X size={20}/></button>}
         </div>
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-8">
           {renderMenulerListesi(filtrelenmisMenuler, true)}
@@ -244,7 +243,7 @@ export default function Menulerim({
                 <input type="date" required value={planTarihSecildi} onChange={(e) => setPlanTarihSecildi(e.target.value)} className="w-full p-3 border rounded-xl bg-slate-50 outline-none focus:ring-2 focus:ring-orange-500 font-medium min-h-[50px] block appearance-none text-slate-800" />
                 <div className="flex justify-end gap-2">
                   <button type="button" onClick={() => setPlanModaliIcinMenu(null)} className="px-4 py-2 bg-slate-100 rounded-xl font-bold text-slate-600 text-sm">İptal</button>
-                  <button type="submit" className="px-5 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-xl font-bold text-sm shadow-sm">Plana Ekle</button>
+                  <button type="submit" className="px-5 py-2 bg-orange-600 md:hover:bg-orange-700 text-white rounded-xl font-bold text-sm shadow-sm">Plana Ekle</button>
                 </div>
               </form>
             </div>
@@ -267,7 +266,7 @@ export default function Menulerim({
       <div className="relative mb-6">
         <Search size={20} className="absolute left-4 top-3.5 text-slate-400" />
         <input type="text" placeholder="Tüm menülerde menü ismi veya yemek ara..." value={genelMenuArama} onChange={(e) => setGenelMenuArama(e.target.value)} className="w-full pl-12 pr-9 p-3 border border-orange-200 rounded-xl outline-none focus:ring-2 focus:ring-orange-500 shadow-sm text-base bg-white" />
-        {genelMenuArama && <button onClick={() => setGenelMenuArama('')} className="absolute right-4 top-3.5 text-slate-400 hover:text-red-500 transition-colors"><X size={20}/></button>}
+        {genelMenuArama && <button onClick={() => setGenelMenuArama('')} className="absolute right-4 top-3.5 text-slate-400 md:hover:text-red-500 transition-colors"><X size={20}/></button>}
       </div>
       
       {genelMenuArama.trim() !== '' ? (
@@ -280,9 +279,9 @@ export default function Menulerim({
             const adet = menuler.filter(m => m.kategori === kategori).length;
             if (kategori === 'Kategorisiz' && adet === 0) return null;
             return (
-              <div key={kategori} onClick={() => {setMenuKlasoru(kategori); setMenuArama('');}} className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 cursor-pointer hover:border-orange-400 hover:shadow-md transition-all flex items-center justify-between group">
+              <div key={kategori} onClick={() => {setMenuKlasoru(kategori); setMenuArama('');}} className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 cursor-pointer md:hover:border-orange-400 md:hover:shadow-md transition-all flex items-center justify-between group">
                 <div className="flex items-center">
-                  <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center mr-4 group-hover:bg-orange-500 transition-colors"><Folder size={24} className="text-orange-500 group-hover:text-white transition-colors" /></div>
+                  <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center mr-4 md:group-hover:bg-orange-500 transition-colors"><Folder size={24} className="text-orange-500 md:group-hover:text-white transition-colors" /></div>
                   <h4 className="font-bold text-slate-800 text-base sm:text-lg">{kategori}</h4>
                 </div>
                 <span className="text-xs sm:text-sm font-bold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">{adet} Menü</span>
@@ -300,7 +299,7 @@ export default function Menulerim({
               <input type="date" required value={planTarihSecildi} onChange={(e) => setPlanTarihSecildi(e.target.value)} className="w-full p-3 border rounded-xl bg-slate-50 outline-none focus:ring-2 focus:ring-orange-500 font-medium min-h-[50px] block appearance-none text-slate-800" />
               <div className="flex justify-end gap-2">
                 <button type="button" onClick={() => setPlanModaliIcinMenu(null)} className="px-4 py-2 bg-slate-100 rounded-xl font-bold text-slate-600 text-sm">İptal</button>
-                <button type="submit" className="px-5 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-xl font-bold text-sm shadow-sm">Plana Ekle</button>
+                <button type="submit" className="px-5 py-2 bg-orange-600 md:hover:bg-orange-700 text-white rounded-xl font-bold text-sm shadow-sm">Plana Ekle</button>
               </div>
             </form>
           </div>

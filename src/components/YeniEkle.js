@@ -70,7 +70,7 @@ export default function YeniEkle({
                     ) : (
                       <div className="flex flex-col items-center"><ImageIcon size={24} /><span className="text-[10px] mt-1 font-bold">Resim Seç</span></div>
                     )}
-                    <input type="file" accept="image/*" onChange={(e) => resimYukle(e, null)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                    <input type="file" accept="image/*" onChange={(e) => resimYukle(e, 'tarif', null)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                   </div>
                   {yeniTarif.resim && (
                     <button type="button" onClick={() => setYeniTarif({...yeniTarif, resim: ''})} className="text-red-500 text-sm font-bold bg-red-50 px-3 py-1.5 rounded-lg hover:bg-red-100 transition-colors">Fotoğrafı Kaldır</button>
@@ -127,7 +127,7 @@ export default function YeniEkle({
                             ) : (
                               <div className="relative cursor-pointer bg-slate-50 border border-dashed border-slate-300 text-slate-500 hover:text-orange-600 hover:border-orange-300 hover:bg-orange-50 transition-colors px-3 py-1.5 rounded-lg flex items-center w-fit">
                                 <ImageIcon size={14} className="mr-1.5"/> <span className="text-[10px] font-bold">Adıma Fotoğraf Ekle (Opsiyonel)</span>
-                                <input type="file" accept="image/*" onChange={(e) => resimYukle(e, index)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"/>
+                                <input type="file" accept="image/*" onChange={(e) => resimYukle(e, 'tarif', index)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"/>
                               </div>
                             )}
                           </div>
@@ -145,7 +145,7 @@ export default function YeniEkle({
               </button>
           </form>
         ) : (
-          <form onSubmit={menuKaydet} className="space-y-4">
+          <form onSubmit={menuKaydet} className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div><label className="block text-sm font-medium text-slate-700 mb-1">Menü Adı</label><input type="text" required value={yeniMenu.ad} onChange={e => setYeniMenu({...yeniMenu, ad: e.target.value})} className="w-full p-3 border rounded-lg bg-slate-50 outline-none focus:ring-2 focus:ring-orange-500" placeholder="Örn: Akşam Menüsü" /></div>
               <div>
@@ -153,6 +153,25 @@ export default function YeniEkle({
                 <select value={yeniMenu.kategori} onChange={(e) => setYeniMenu({...yeniMenu, kategori: e.target.value})} className="w-full p-3 border rounded-lg bg-slate-50 outline-none">{menuKategorileri.filter(k => k !== 'Kategorisiz').map(k => <option key={k} value={k}>{k}</option>)}</select>
               </div>
             </div>
+
+            {/* YENİ: MENÜ FOTOĞRAFI YÜKLEME KISMI */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Menü Kapak Fotoğrafı (Opsiyonel)</label>
+              <div className="flex items-center gap-4">
+                <div className="relative overflow-hidden w-24 h-24 bg-orange-50 border-2 border-dashed border-orange-200 rounded-xl flex items-center justify-center text-orange-400 hover:bg-orange-100 transition-colors">
+                  {yeniMenu.resim ? (
+                    <img src={yeniMenu.resim} alt="Menü" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="flex flex-col items-center"><ImageIcon size={24} /><span className="text-[10px] mt-1 font-bold">Resim Seç</span></div>
+                  )}
+                  <input type="file" accept="image/*" onChange={(e) => resimYukle(e, 'menu', null)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                </div>
+                {yeniMenu.resim && (
+                  <button type="button" onClick={() => setYeniMenu({...yeniMenu, resim: ''})} className="text-red-500 text-sm font-bold bg-red-50 px-3 py-1.5 rounded-lg hover:bg-red-100 transition-colors">Fotoğrafı Kaldır</button>
+                )}
+              </div>
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">Yemek Seçimi</label>
               <div className="flex gap-2 mb-3 flex-col sm:flex-row">

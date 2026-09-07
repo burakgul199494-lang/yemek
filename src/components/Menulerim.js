@@ -162,7 +162,6 @@ export default function Menulerim({
     );
   }
 
-  // LİSTE GÖRÜNÜMÜNE GEÇEN MENÜ KATEGORİLERİ
   return (
     <div className="animate-in fade-in duration-300">
       <h2 className="text-xl sm:text-2xl font-bold mb-6 text-orange-800 border-b-2 border-orange-200 pb-2 flex items-center">
@@ -171,6 +170,9 @@ export default function Menulerim({
       <div className="flex flex-col space-y-3">
         {menuKategorileri.map(kategori => {
           const adet = menuler.filter(m => m.kategori === kategori).length;
+          // YENİ: İçi boşsa ve kategorisizse GİZLE
+          if (kategori === 'Kategorisiz' && adet === 0) return null;
+          
           return (
             <div key={kategori} onClick={() => {setMenuKlasoru(kategori); setMenuArama('');}} className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 cursor-pointer hover:border-orange-400 hover:shadow-md transition-all flex items-center justify-between group">
               <div className="flex items-center">

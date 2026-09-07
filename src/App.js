@@ -45,7 +45,6 @@ export default function App() {
       if (currentUser) {
         const docRef = doc(db, "kullanicilar", currentUser.uid);
         const docSnap = await getDoc(docRef);
-        
         if (docSnap.exists()) {
           const data = docSnap.data();
           setTarifler(data.tarifler || []);
@@ -65,9 +64,7 @@ export default function App() {
 
   useEffect(() => {
     if (kullanici && veriYuklendi) {
-      setDoc(doc(db, "kullanicilar", kullanici.uid), {
-        tarifler, menuler, haftalikPlan, yemekKategorileri, menuKategorileri
-      });
+      setDoc(doc(db, "kullanicilar", kullanici.uid), { tarifler, menuler, haftalikPlan, yemekKategorileri, menuKategorileri });
     }
   }, [tarifler, menuler, haftalikPlan, yemekKategorileri, menuKategorileri, kullanici, veriYuklendi]);
 
@@ -120,7 +117,8 @@ export default function App() {
     } else {
       setTarifler([...tarifler, { ...eklenecekTarif, id: Date.now().toString() }]);
     }
-    setYeniTarif({ ad: '', kategori: yemekKategorileri[0] || 'Kategorisiz', resim: '', malzemeler: [{ miktar: '', birim: 'gr', isim: '' }], hazirlanis: [''] });
+    const ilkKategori = yemekKategorileri.find(k => k !== 'Kategorisiz') || 'Kategorisiz';
+    setYeniTarif({ ad: '', kategori: ilkKategori, resim: '', malzemeler: [{ miktar: '', birim: 'gr', isim: '' }], hazirlanis: [''] });
   };
 
   const tarifSil = (id) => {
@@ -149,7 +147,8 @@ export default function App() {
     } else {
       setMenuler([...menuler, { ...yeniMenu, id: Date.now().toString() }]);
     }
-    setYeniMenu({ ad: '', kategori: menuKategorileri[0] || 'Kategorisiz', tarifler: [] });
+    const ilkKategori = menuKategorileri.find(k => k !== 'Kategorisiz') || 'Kategorisiz';
+    setYeniMenu({ ad: '', kategori: ilkKategori, tarifler: [] });
   };
 
   const menuSil = (id) => {
@@ -177,36 +176,33 @@ export default function App() {
 
   const kategoriEkle = (tip, yeniAd) => {
     const ad = yeniAd.trim();
-    if (!ad) return;
-    if (tip === 'tarif' && !yemekKategorileri.includes(ad)) setYemekKategorileri([...yemekKategorileri, ad]);
-    if (tip === 'menu' && !menuKategorileri.includes(ad)) setMenuKategorileri([...menuKategorileri, ad]);
-  };
-
-  const kategoriTasi = (tip, index, yon) => {
-    if (tip === 'tarif') {
-      const yeniListe = [...yemekKategorileri];
-      if (index + yon < 0 || index + yon >= yeniListe.length) return;
-      const temp = yeniListe[index];
-      yeniListe[index] = yeniListe[index + yon];
-      yeniListe[index + yon] = temp;
-      setYemekKategorileri(yeniListe);
-    } else {
-      const yeniListe = [...menuKategorileri];
-      if (index + yon < 0 || index + yon >= yeniListe.length) return;
-      const temp = yeniListe[index];
-      yeniListe[index] = yeniListe[index + yon];
-      yeniListe[index + yon] = temp;
-      setMenuKategorileri(yeniListe);
+    if (!ad || ad.toLowerCase() === 'kategorisiz') return;
+    if (tip === 'tarif' && !yemekKategorileri.includes(ad)) {
+      const yeni = [...yemekKategorileri.filter(k => k !== 'Kategorisiz'), ad, 'Kategorisiz'];
+      setYemekKategorileri(yeni);
+    }
+    if (tip === 'menu' && !menuKategorileri.includes(ad)) {
+      const yeni = [...menuKategorileri.filter(k => k !== 'Kategorisiz'), ad, 'Kategorisiz'];
+      setMenuKategorileri(yeni);
     }
   };
 
-  // YENİ: Listeden Hızlı Kategori Değiştirme Fonksiyonu
+  const kategoriTasi = (tip, ad, yon) => {
+    const islemListesi = tip === 'tarif' ? [...yemekKategorileri] : [...menuKategorileri];
+    const stateHook = tip === 'tarif' ? setYemekKategorileri : setMenuKategorileri;
+    
+    const index = islemListesi.indexOf(ad);
+    if (index < 0 || index + yon < 0 || index + yon >= islemListesi.length || islemListesi[index + yon] === 'Kategorisiz') return;
+    
+    const temp = islemListesi[index];
+    islemListesi[index] = islemListesi[index + yon];
+    islemListesi[index + yon] = temp;
+    stateHook(islemListesi);
+  };
+
   const hizliKategoriGuncelle = (tip, id, yeniKategori) => {
-    if (tip === 'tarif') {
-      setTarifler(prev => prev.map(t => t.id === id ? { ...t, kategori: yeniKategori } : t));
-    } else {
-      setMenuler(prev => prev.map(m => m.id === id ? { ...m, kategori: yeniKategori } : m));
-    }
+    if (tip === 'tarif') setTarifler(prev => prev.map(t => t.id === id ? { ...t, kategori: yeniKategori } : t));
+    else setMenuler(prev => prev.map(m => m.id === id ? { ...m, kategori: yeniKategori } : m));
   };
 
   const tariheMenuEkle = (tarihStr, menuObjesi) => {
@@ -217,21 +213,7 @@ export default function App() {
     setHaftalikPlan(prev => { const kopya = { ...prev }; delete kopya[tarihStr]; return kopya; });
   };
 
-  const getGunlukTopluMalzemeler = (gununTarifleri) => {
-    const liste = {};
-    gununTarifleri.forEach(tarif => {
-      if (!tarif) return;
-      tarif.malzemeler.forEach(m => {
-        if (!m.isim) return;
-        const key = `${m.isim.toLowerCase().trim()}_${m.birim}`;
-        if (!liste[key]) liste[key] = { isim: m.isim.charAt(0).toUpperCase() + m.isim.slice(1), birim: m.birim, miktar: 0 };
-        liste[key].miktar += Number(m.miktar) || 0;
-      });
-    });
-    return Object.values(liste).sort((a,b) => a.isim.localeCompare(b.isim));
-  };
-
-  const navClickEkle = () => { setAktifSekme('ekle'); setYeniTarif({ ad: '', kategori: yemekKategorileri[0] || 'Kategorisiz', resim: '', malzemeler: [{ miktar: '', birim: 'gr', isim: '' }], hazirlanis: [''] }); setYeniMenu({ ad: '', kategori: menuKategorileri[0] || 'Kategorisiz', tarifler: [] }); setDetayGosterilenTarif(null); setNeredenGeldi(null); };
+  const navClickEkle = () => { setAktifSekme('ekle'); setYeniTarif({ ad: '', kategori: yemekKategorileri.find(k=>k!=='Kategorisiz')||'Kategorisiz', resim: '', malzemeler: [{ miktar: '', birim: 'gr', isim: '' }], hazirlanis: [''] }); setYeniMenu({ ad: '', kategori: menuKategorileri.find(k=>k!=='Kategorisiz')||'Kategorisiz', tarifler: [] }); setDetayGosterilenTarif(null); setNeredenGeldi(null); };
   const navClickTarifler = () => { setAktifSekme('tarifler'); setTarifKlasoru(null); setDetayGosterilenTarif(null); setNeredenGeldi(null); setTarifArama(''); };
   const navClickMenuler = () => { setAktifSekme('menuler'); setDetayMenu(null); setNeredenGeldi(null); };
 
@@ -277,7 +259,7 @@ export default function App() {
             malzemeIslem={malzemeIslem} hazirlanisIslem={hazirlanisIslem} resimYukle={resimYukle} 
             menuTarifToggle={menuTarifToggle} tarifSil={tarifSil} menuSil={menuSil} 
             kategoriEkle={kategoriEkle} kategoriSil={kategoriSil} kategoriTasi={kategoriTasi}
-            hizliKategoriGuncelle={hizliKategoriGuncelle} // YENİ PROP
+            hizliKategoriGuncelle={hizliKategoriGuncelle}
           />
         )}
 
@@ -354,6 +336,8 @@ export default function App() {
                 <div className="flex flex-col space-y-3">
                   {yemekKategorileri.map(kategori => {
                     const adet = tarifler.filter(t => t.kategori === kategori).length;
+                    // YENİ EKLENEN KISIM: İçi boşsa ve kategorisizse GİZLE
+                    if (kategori === 'Kategorisiz' && adet === 0) return null;
                     return (
                       <div key={kategori} onClick={() => {setTarifKlasoru(kategori); setTarifArama('');}} className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 cursor-pointer hover:border-orange-400 hover:shadow-md transition-all flex items-center justify-between group">
                         <div className="flex items-center">

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, ShoppingCart, ChefHat, Calendar, Folder, Search, Layers } from 'lucide-react';
+import { ArrowLeft, ShoppingCart, ChefHat, Check, Calendar, Folder, Search, Layers, Printer } from 'lucide-react';
 
 export default function Menulerim({ 
   menuler, tarifler, getGunlukTopluMalzemeler, 
@@ -12,7 +12,6 @@ export default function Menulerim({
   
   const [menuKlasoru, setMenuKlasoru] = useState(null);
   const [menuArama, setMenuArama] = useState('');
-  
   const [genelMenuArama, setGenelMenuArama] = useState('');
 
   if (detayMenu) {
@@ -22,7 +21,6 @@ export default function Menulerim({
     const takvimeIsle = (e) => {
       e.preventDefault();
       if (!planTarihSecildi) return;
-      // YENİ: Tekil formüle bağladık
       tariheEkle(planTarihSecildi, 'menu', detayMenu);
       setPlanModalAcik(false);
       setPlanTarihSecildi('');
@@ -31,95 +29,143 @@ export default function Menulerim({
 
     return (
       <div className="animate-in fade-in duration-300">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
-          <button onClick={() => setDetayMenu(null)} className="flex items-center text-orange-800 hover:text-orange-600 font-bold">
-            <ArrowLeft size={20} className="mr-2"/> {genelMenuArama ? 'Aramaya Dön' : 'Geri Dön'}
-          </button>
+        <div className="print:hidden">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
+            <button onClick={() => setDetayMenu(null)} className="flex items-center text-orange-800 hover:text-orange-600 font-bold">
+              <ArrowLeft size={20} className="mr-2"/> {genelMenuArama ? 'Aramaya Dön' : 'Geri Dön'}
+            </button>
+            
+            <div className="flex gap-2">
+              <button onClick={() => window.print()} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-bold flex items-center shadow-sm text-sm">
+                <Printer size={18} className="mr-2" /> PDF / Çıktı Al
+              </button>
+              <button onClick={() => setPlanModalAcik(true)} className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-xl font-bold flex items-center shadow-sm text-sm">
+                <Calendar size={18} className="mr-2" /> Takvime Planla
+              </button>
+            </div>
+          </div>
           
-          <button onClick={() => setPlanModalAcik(true)} className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-xl font-bold flex items-center shadow-sm text-sm">
-            <Calendar size={18} className="mr-2" /> Takvime Planla
-          </button>
-        </div>
-        
-        <h2 className="text-2xl font-extrabold text-slate-800 mb-6 border-b-2 border-orange-200 pb-2">{detayMenu.ad}</h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-orange-50 p-5 rounded-xl border border-orange-200 shadow-sm h-fit">
-            <h3 className="text-lg font-bold text-orange-800 mb-4 flex items-center border-b border-orange-200 pb-2">
-              <ShoppingCart className="mr-2" size={20}/> Toplu İhtiyaç Listesi
-            </h3>
-            <ul className="space-y-3">
-              {alisverisListesi.map((m, i) => (
-                <li key={i} className="flex justify-between items-center text-slate-700 text-sm border-b border-orange-100 pb-1">
-                  <span className="font-medium">{m.isim}</span>
-                  <span className="font-bold text-slate-900 bg-white px-2 py-0.5 rounded shadow-sm">{m.miktar} {m.birim}</span>
-                </li>
+          <h2 className="text-2xl font-extrabold text-slate-800 mb-6 border-b-2 border-orange-200 pb-2">{detayMenu.ad}</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-orange-50 p-5 rounded-xl border border-orange-200 shadow-sm h-fit">
+              <h3 className="text-lg font-bold text-orange-800 mb-4 flex items-center border-b border-orange-200 pb-2">
+                <ShoppingCart className="mr-2" size={20}/> Toplu İhtiyaç Listesi
+              </h3>
+              <ul className="space-y-3">
+                {alisverisListesi.map((m, i) => (
+                  <li key={i} className="flex justify-between items-center text-slate-700 text-sm border-b border-orange-100 pb-1">
+                    <span className="font-medium">{m.isim}</span>
+                    <span className="font-bold text-slate-900 bg-white px-2 py-0.5 rounded shadow-sm">{m.miktar} {m.birim}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="md:col-span-2 space-y-6">
+              {menuTarifleri.map(tarif => (
+                <div key={tarif.id} className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 className="text-xl font-bold text-slate-800 flex items-center">
+                        <ChefHat className="mr-2 text-orange-500" size={22}/> {tarif.ad}
+                      </h3>
+                      <span className="text-xs text-orange-700 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded-full font-medium inline-block mt-2">
+                        {tarif.kategori}
+                      </span>
+                    </div>
+                    <button 
+                      onClick={() => { setDetayGosterilenTarif(tarif); setNeredenGeldi('menuler'); setAktifSekme('tarifler'); }}
+                      className="text-xs text-blue-600 font-bold bg-blue-50 hover:bg-blue-100 px-3 py-2 rounded-lg border border-blue-200 transition-colors shrink-0 ml-2 shadow-sm"
+                    >
+                      Tam Detayı Gör →
+                    </button>
+                  </div>
+
+                  <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                    <h4 className="font-bold text-slate-700 text-sm mb-3 border-b border-slate-200 pb-1">Hazırlanışı:</h4>
+                    {Array.isArray(tarif.hazirlanis) ? (
+                      <ul className="space-y-2 text-sm text-slate-600 leading-relaxed">
+                        {tarif.hazirlanis.map((adim, i) => adim.trim() && (
+                          <li key={i} className="flex gap-2">
+                            <span className="font-bold text-orange-600 shrink-0">{i+1}.</span>
+                            <span>{adim}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="whitespace-pre-wrap text-sm text-slate-600 leading-relaxed">{tarif.hazirlanis}</p>
+                    )}
+                  </div>
+                </div>
               ))}
-            </ul>
+            </div>
           </div>
 
-          <div className="md:col-span-2 space-y-6">
-            {menuTarifleri.map(tarif => (
-              <div key={tarif.id} className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h3 className="text-xl font-bold text-slate-800 flex items-center">
-                      <ChefHat className="mr-2 text-orange-500" size={22}/> {tarif.ad}
-                    </h3>
-                    <span className="text-xs text-orange-700 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded-full font-medium inline-block mt-2">
-                      {tarif.kategori}
-                    </span>
+          {planModalAcik && (
+            <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[110] p-4">
+              <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full">
+                <h3 className="text-lg font-bold text-slate-800 mb-3">Bu Menü Hangi Güne Eklensin?</h3>
+                <p className="text-xs text-slate-500 mb-4">Seçtiğiniz tarihe menüdeki tüm yemekler eklenecektir.</p>
+                <form onSubmit={takvimeIsle} className="space-y-4">
+                  <input 
+                    type="date" required value={planTarihSecildi} onChange={(e) => setPlanTarihSecildi(e.target.value)} 
+                    className="w-full p-3 border rounded-xl bg-slate-50 outline-none focus:ring-2 focus:ring-orange-500 font-medium"
+                  />
+                  <div className="flex justify-end gap-2">
+                    <button type="button" onClick={() => setPlanModalAcik(false)} className="px-4 py-2 bg-slate-100 rounded-xl font-bold text-slate-600 text-sm">İptal</button>
+                    <button type="submit" className="px-5 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-xl font-bold text-sm shadow-sm">Plana Ekle</button>
                   </div>
-                  <button 
-                    onClick={() => { setDetayGosterilenTarif(tarif); setNeredenGeldi('menuler'); setAktifSekme('tarifler'); }}
-                    className="text-xs text-blue-600 font-bold bg-blue-50 hover:bg-blue-100 px-3 py-2 rounded-lg border border-blue-200 transition-colors shrink-0 ml-2 shadow-sm"
-                  >
-                    Tam Detayı Gör →
-                  </button>
-                </div>
+                </form>
+              </div>
+            </div>
+          )}
+        </div>
 
-                <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
-                  <h4 className="font-bold text-slate-700 text-sm mb-3 border-b border-slate-200 pb-1">Hazırlanışı:</h4>
-                  {Array.isArray(tarif.hazirlanis) ? (
-                    <ul className="space-y-2 text-sm text-slate-600 leading-relaxed">
-                      {tarif.hazirlanis.map((adim, i) => adim.trim() && (
-                        <li key={i} className="flex gap-2">
-                          <span className="font-bold text-orange-600 shrink-0">{i+1}.</span>
-                          <span>{adim}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="whitespace-pre-wrap text-sm text-slate-600 leading-relaxed">{tarif.hazirlanis || "Hazırlanış bilgisi girilmemiş."}</p>
-                  )}
+        {/* MENÜ DETAYI YAZDIRMA (PDF) ŞABLONU */}
+        <div className="hidden print:block print:w-full print:bg-white print:text-black print:p-4">
+          <div className="text-center border-b-4 border-black pb-4 mb-6">
+            <h1 className="text-3xl font-extrabold uppercase tracking-wider mb-2">Menü Programı</h1>
+            <p className="text-xl font-bold text-gray-700">{detayMenu.ad}</p>
+          </div>
+
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold border-b-2 border-gray-400 mb-4 pb-1">Toplu İhtiyaç Listesi</h2>
+            <div className="flex flex-wrap gap-x-8 gap-y-2">
+              {alisverisListesi.map((m, i) => (
+                <div key={i} className="text-base">
+                  <span className="font-bold border border-gray-300 px-1.5 py-0.5 rounded mr-1 bg-gray-100">{m.miktar} {m.birim}</span> {m.isim}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <h2 className="text-2xl font-bold border-b-2 border-gray-400 mb-4 pb-1">Tarifler ve Yapılışları</h2>
+            {menuTarifleri.map(t => (
+              <div key={t.id} className="mb-8 break-inside-avoid border border-gray-300 p-4 rounded-lg">
+                <h3 className="text-xl font-bold mb-3 flex items-center bg-gray-100 p-2 rounded">{t.ad}</h3>
+                <div className="mb-3 text-sm">
+                  <strong>Malzemeler: </strong> 
+                  {t.malzemeler.map((m,i) => <span key={i}>{m.miktar} {m.birim} {m.isim}{i < t.malzemeler.length-1 ? ', ' : ''}</span>)}
+                </div>
+                <div>
+                  <strong className="block mb-2">Hazırlanışı:</strong>
+                  {Array.isArray(t.hazirlanis) ? (
+                    <ol className="list-decimal pl-5 space-y-1 text-sm">
+                      {t.hazirlanis.map((adim, i) => adim.trim() && <li key={i}>{adim}</li>)}
+                    </ol>
+                  ) : <p className="text-sm">{t.hazirlanis}</p>}
                 </div>
               </div>
             ))}
           </div>
         </div>
-
-        {planModalAcik && (
-          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[110] p-4">
-            <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full">
-              <h3 className="text-lg font-bold text-slate-800 mb-3">Bu Menü Hangi Güne Eklensin?</h3>
-              <p className="text-xs text-slate-500 mb-4">Seçtiğiniz tarihe menüdeki tüm yemekler eklenecektir.</p>
-              <form onSubmit={takvimeIsle} className="space-y-4">
-                <input 
-                  type="date" required value={planTarihSecildi} onChange={(e) => setPlanTarihSecildi(e.target.value)} 
-                  className="w-full p-3 border rounded-xl bg-slate-50 outline-none focus:ring-2 focus:ring-orange-500 font-medium"
-                />
-                <div className="flex justify-end gap-2">
-                  <button type="button" onClick={() => setPlanModalAcik(false)} className="px-4 py-2 bg-slate-100 rounded-xl font-bold text-slate-600 text-sm">İptal</button>
-                  <button type="submit" className="px-5 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-xl font-bold text-sm shadow-sm">Plana Ekle</button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
       </div>
     );
   }
 
+  // --- KLASÖR VE LİSTELEME GÖRÜNÜMLERİ AŞAĞIDADIR (Aynı Bırakıldı) ---
   if (menuKlasoru) {
     const q = menuArama.toLowerCase();
     const filtrelenmisMenuler = menuler.filter(m => {
@@ -168,7 +214,6 @@ export default function Menulerim({
                       <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 w-full">
                         <h3 className="text-base sm:text-lg font-bold text-slate-800 truncate">{menu.ad}</h3>
                         <span className="text-[10px] sm:text-xs text-orange-700 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded font-medium w-max">{menu.kategori}</span>
-                        {/* YENİ: Menünün en son yendiği tarih */}
                         <span className="text-[10px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded flex items-center w-max"><Calendar size={12} className="mr-1"/> Son: {sonTarihMenu(menu.ad) || 'Yok'}</span>
                       </div>
                       <p className="text-xs sm:text-sm text-slate-500 truncate w-full mt-1">{icerik || "Menü boş"}</p>
@@ -225,7 +270,6 @@ export default function Menulerim({
                       <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 w-full">
                         <h3 className="text-base sm:text-lg font-bold text-slate-800 truncate">{menu.ad}</h3>
                         <span className="text-[10px] sm:text-xs text-orange-700 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded font-medium w-max">{menu.kategori}</span>
-                        {/* YENİ: Menünün en son yendiği tarih */}
                         <span className="text-[10px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded flex items-center w-max"><Calendar size={12} className="mr-1"/> Son: {sonTarihMenu(menu.ad) || 'Yok'}</span>
                       </div>
                       <p className="text-xs sm:text-sm text-slate-500 truncate w-full mt-1">{icerik || "Menü boş"}</p>

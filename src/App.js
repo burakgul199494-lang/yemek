@@ -161,12 +161,13 @@ export default function App() {
     });
   };
 
-  const kategoriSil = (tip, silinecek) => {
+const kategoriSil = (tip, silinecek) => {
     if (silinecek === 'Kategorisiz') return;
     setModal({
       acik: true, tip: 'onay', mesaj: `"${silinecek}" kategorisini silmek istediğinize emin misiniz? İçindeki ögeler 'Kategorisiz' olarak güncellenecek.`,
       onOnay: () => {
-        if (tip === 'yemek') {
+        // BURADAKİ 'yemek' KELİMESİNİ 'tarif' OLARAK DÜZELTTİK
+        if (tip === 'tarif') {
           setYemekKategorileri(prev => prev.filter(k => k !== silinecek));
           setTarifler(prev => prev.map(t => t.kategori === silinecek ? {...t, kategori: 'Kategorisiz'} : t));
         } else {
@@ -180,7 +181,8 @@ export default function App() {
   const kategoriEkle = (tip, yeniAd) => {
     const ad = yeniAd.trim();
     if (!ad) return;
-    if (tip === 'yemek' && !yemekKategorileri.includes(ad)) setYemekKategorileri([...yemekKategorileri, ad]);
+    // BURADAKİ 'yemek' KELİMESİNİ 'tarif' OLARAK DÜZELTTİK
+    if (tip === 'tarif' && !yemekKategorileri.includes(ad)) setYemekKategorileri([...yemekKategorileri, ad]);
     if (tip === 'menu' && !menuKategorileri.includes(ad)) setMenuKategorileri([...menuKategorileri, ad]);
   };
 

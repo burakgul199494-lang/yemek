@@ -28,7 +28,7 @@ export default function Menulerim({
     tariheEkle(planTarihSecildi, 'menu', planModaliIcinMenu);
     setPlanModaliIcinMenu(null);
     setPlanTarihSecildi('');
-    alert(`"${planModaliIcinMenu.ad}" menüsü ${planTarihSecildi} tarihine başarıyla eklendi!`);
+    alert(`"${planModaliIcinMenu.ad}" menüsü plana başarıyla eklendi!`);
   };
 
   if (detayMenu || hizliPrintMenu) {
@@ -166,7 +166,8 @@ export default function Menulerim({
             <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm relative animate-in zoom-in-95 duration-200">
               <h3 className="text-lg font-bold text-slate-800 mb-3">Bu Menü Hangi Güne Eklensin?</h3>
               <form onSubmit={takvimeIsle} className="space-y-4">
-                <input type="date" required value={planTarihSecildi} onChange={(e) => setPlanTarihSecildi(e.target.value)} className="w-full p-3 border rounded-xl bg-slate-50 outline-none focus:ring-2 focus:ring-orange-500 font-medium" />
+                {/* YENİ: Modal Tarih Kutusu iOS Görünümü Düzeltildi */}
+                <input type="date" required value={planTarihSecildi} onChange={(e) => setPlanTarihSecildi(e.target.value)} className="w-full p-3 border rounded-xl bg-slate-50 outline-none focus:ring-2 focus:ring-orange-500 font-medium min-h-[50px] block appearance-none text-slate-800" />
                 <div className="flex justify-end gap-2">
                   <button type="button" onClick={() => setPlanModaliIcinMenu(null)} className="px-4 py-2 bg-slate-100 rounded-xl font-bold text-slate-600 text-sm">İptal</button>
                   <button type="submit" className="px-5 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-xl font-bold text-sm shadow-sm">Plana Ekle</button>
@@ -240,7 +241,7 @@ export default function Menulerim({
             <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm relative animate-in zoom-in-95 duration-200">
               <h3 className="text-lg font-bold text-slate-800 mb-3">Bu Menü Hangi Güne Eklensin?</h3>
               <form onSubmit={takvimeIsle} className="space-y-4">
-                <input type="date" required value={planTarihSecildi} onChange={(e) => setPlanTarihSecildi(e.target.value)} className="w-full p-3 border rounded-xl bg-slate-50 outline-none focus:ring-2 focus:ring-orange-500 font-medium" />
+                <input type="date" required value={planTarihSecildi} onChange={(e) => setPlanTarihSecildi(e.target.value)} className="w-full p-3 border rounded-xl bg-slate-50 outline-none focus:ring-2 focus:ring-orange-500 font-medium min-h-[50px] block appearance-none text-slate-800" />
                 <div className="flex justify-end gap-2">
                   <button type="button" onClick={() => setPlanModaliIcinMenu(null)} className="px-4 py-2 bg-slate-100 rounded-xl font-bold text-slate-600 text-sm">İptal</button>
                   <button type="submit" className="px-5 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-xl font-bold text-sm shadow-sm">Plana Ekle</button>
@@ -296,7 +297,7 @@ export default function Menulerim({
           <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm relative animate-in zoom-in-95 duration-200">
             <h3 className="text-lg font-bold text-slate-800 mb-3">Bu Menü Hangi Güne Eklensin?</h3>
             <form onSubmit={takvimeIsle} className="space-y-4">
-              <input type="date" required value={planTarihSecildi} onChange={(e) => setPlanTarihSecildi(e.target.value)} className="w-full p-3 border rounded-xl bg-slate-50 outline-none focus:ring-2 focus:ring-orange-500 font-medium" />
+              <input type="date" required value={planTarihSecildi} onChange={(e) => setPlanTarihSecildi(e.target.value)} className="w-full p-3 border rounded-xl bg-slate-50 outline-none focus:ring-2 focus:ring-orange-500 font-medium min-h-[50px] block appearance-none text-slate-800" />
               <div className="flex justify-end gap-2">
                 <button type="button" onClick={() => setPlanModaliIcinMenu(null)} className="px-4 py-2 bg-slate-100 rounded-xl font-bold text-slate-600 text-sm">İptal</button>
                 <button type="submit" className="px-5 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-xl font-bold text-sm shadow-sm">Plana Ekle</button>

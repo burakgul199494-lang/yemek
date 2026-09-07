@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, ShoppingCart, ChefHat, Calendar, Folder, Search, Layers, Printer, Image as ImageIcon } from 'lucide-react';
+import { ArrowLeft, ShoppingCart, ChefHat, Calendar, Folder, Search, Layers, Printer, Image as ImageIcon, X } from 'lucide-react';
 
 export default function Menulerim({ 
   menuler, tarifler, getGunlukTopluMalzemeler, 
@@ -31,7 +31,6 @@ export default function Menulerim({
     alert(`"${planModaliIcinMenu.ad}" menüsü ${planTarihSecildi} tarihine başarıyla eklendi!`);
   };
 
-  // DETAY GÖRÜNÜMÜ VEYA GİZLİ PDF ÇIKTISI EKRANI
   if (detayMenu || hizliPrintMenu) {
     const islemGorenMenu = hizliPrintMenu || detayMenu;
     const menuTarifleri = islemGorenMenu.tarifler.map(id => tarifler.find(t => t.id === id)).filter(Boolean);
@@ -163,10 +162,9 @@ export default function Menulerim({
         </div>
 
         {planModaliIcinMenu && (
-          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[110] p-4 print:hidden">
-            <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full animate-in zoom-in-95 duration-200">
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[200] p-4 print:hidden">
+            <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm relative animate-in zoom-in-95 duration-200">
               <h3 className="text-lg font-bold text-slate-800 mb-3">Bu Menü Hangi Güne Eklensin?</h3>
-              <p className="text-xs text-slate-500 mb-4">Seçtiğiniz tarihe menüdeki tüm yemekler eklenecektir.</p>
               <form onSubmit={takvimeIsle} className="space-y-4">
                 <input type="date" required value={planTarihSecildi} onChange={(e) => setPlanTarihSecildi(e.target.value)} className="w-full p-3 border rounded-xl bg-slate-50 outline-none focus:ring-2 focus:ring-orange-500 font-medium" />
                 <div className="flex justify-end gap-2">
@@ -181,7 +179,6 @@ export default function Menulerim({
     );
   }
 
-  // --- KLASÖR VE ARAMA LİSTELERİ ---
   const renderMenulerListesi = (menulerListesi, klasorMu) => {
     if (menulerListesi.length === 0) return <div className="text-center py-12 text-slate-500">Gösterilecek menü bulunamadı.</div>;
     return (
@@ -203,8 +200,6 @@ export default function Menulerim({
                   <p className="text-xs sm:text-sm text-slate-500 truncate w-full mt-1">{icerik || "Menü boş"}</p>
                 </div>
               </div>
-              
-              {/* YENİ: Hızlı Planla ve PDF Butonları Eklendi */}
               <div className="w-full sm:w-auto flex justify-end gap-2 shrink-0">
                 <button onClick={(e) => { e.stopPropagation(); setHizliPrintMenu(menu); }} className="text-xs bg-blue-50 text-blue-600 border border-blue-100 hover:bg-blue-600 hover:text-white px-3 py-1.5 rounded-lg transition-colors font-bold flex items-center shadow-sm w-full sm:w-auto justify-center"><Printer size={14} className="mr-1"/> PDF</button>
                 <button onClick={(e) => { e.stopPropagation(); setPlanModaliIcinMenu(menu); }} className="text-xs bg-orange-100 text-orange-700 hover:bg-orange-600 hover:text-white px-3 py-1.5 rounded-lg transition-colors font-bold flex items-center shadow-sm w-full sm:w-auto justify-center"><Calendar size={14} className="mr-1"/> Planla</button>
@@ -233,15 +228,16 @@ export default function Menulerim({
         </div>
         <div className="relative mb-6">
           <Search size={20} className="absolute left-4 top-3.5 text-slate-400" />
-          <input type="text" placeholder={`"${menuKlasoru}" içinde menü veya yemek ara...`} value={menuArama} onChange={(e) => setMenuArama(e.target.value)} className="w-full pl-12 p-3 border border-orange-200 rounded-xl outline-none focus:ring-2 focus:ring-orange-500 shadow-sm text-base" />
+          <input type="text" placeholder={`"${menuKlasoru}" içinde menü veya yemek ara...`} value={menuArama} onChange={(e) => setMenuArama(e.target.value)} className="w-full pl-12 pr-9 p-3 border border-orange-200 rounded-xl outline-none focus:ring-2 focus:ring-orange-500 shadow-sm text-base" />
+          {menuArama && <button onClick={() => setMenuArama('')} className="absolute right-4 top-3.5 text-slate-400 hover:text-red-500 transition-colors"><X size={20}/></button>}
         </div>
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-8">
           {renderMenulerListesi(filtrelenmisMenuler, true)}
         </div>
 
         {planModaliIcinMenu && (
-          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[110] p-4 print:hidden">
-            <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full animate-in zoom-in-95 duration-200">
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[200] p-4 print:hidden">
+            <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm relative animate-in zoom-in-95 duration-200">
               <h3 className="text-lg font-bold text-slate-800 mb-3">Bu Menü Hangi Güne Eklensin?</h3>
               <form onSubmit={takvimeIsle} className="space-y-4">
                 <input type="date" required value={planTarihSecildi} onChange={(e) => setPlanTarihSecildi(e.target.value)} className="w-full p-3 border rounded-xl bg-slate-50 outline-none focus:ring-2 focus:ring-orange-500 font-medium" />
@@ -269,7 +265,8 @@ export default function Menulerim({
       <h2 className="text-xl sm:text-2xl font-bold mb-6 text-orange-800 border-b-2 border-orange-200 pb-2 flex items-center"><Folder className="mr-2" size={24}/> Menü Kategorileri</h2>
       <div className="relative mb-6">
         <Search size={20} className="absolute left-4 top-3.5 text-slate-400" />
-        <input type="text" placeholder="Tüm menülerde menü ismi veya yemek ara..." value={genelMenuArama} onChange={(e) => setGenelMenuArama(e.target.value)} className="w-full pl-12 p-3 border border-orange-200 rounded-xl outline-none focus:ring-2 focus:ring-orange-500 shadow-sm text-base bg-white" />
+        <input type="text" placeholder="Tüm menülerde menü ismi veya yemek ara..." value={genelMenuArama} onChange={(e) => setGenelMenuArama(e.target.value)} className="w-full pl-12 pr-9 p-3 border border-orange-200 rounded-xl outline-none focus:ring-2 focus:ring-orange-500 shadow-sm text-base bg-white" />
+        {genelMenuArama && <button onClick={() => setGenelMenuArama('')} className="absolute right-4 top-3.5 text-slate-400 hover:text-red-500 transition-colors"><X size={20}/></button>}
       </div>
       
       {genelMenuArama.trim() !== '' ? (
@@ -295,8 +292,8 @@ export default function Menulerim({
       )}
 
       {planModaliIcinMenu && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[110] p-4 print:hidden">
-          <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[200] p-4 print:hidden">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm relative animate-in zoom-in-95 duration-200">
             <h3 className="text-lg font-bold text-slate-800 mb-3">Bu Menü Hangi Güne Eklensin?</h3>
             <form onSubmit={takvimeIsle} className="space-y-4">
               <input type="date" required value={planTarihSecildi} onChange={(e) => setPlanTarihSecildi(e.target.value)} className="w-full p-3 border rounded-xl bg-slate-50 outline-none focus:ring-2 focus:ring-orange-500 font-medium" />

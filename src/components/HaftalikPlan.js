@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { CalendarDays, ChevronLeft, ChevronRight, ShoppingCart, Trash2, Printer, X, ArrowLeft, ChefHat } from 'lucide-react';
+import { CalendarDays, ChevronLeft, ChevronRight, ShoppingCart, Trash2, Printer, X, ArrowLeft, ChefHat, Image as ImageIcon } from 'lucide-react';
 
-export default function HaftalikPlan({ haftalikPlan, tarifler, menuler, planTemizle, plandanOgeSil, getGunlukTopluMalzemeler, setAktifSekme, setDetayGosterilenTarif, setNeredenGeldi }) {
+export default function HaftalikPlan({ haftalikPlan, tarifler, menuler, planTemizle, plandanOgeSil, getGunlukTopluMalzemeler, setAktifSekme, setDetayGosterilenTarif, setNeredenGeldi, setAcikResim }) {
   const [aktifPazartesi, setAktifPazartesi] = useState(() => {
     const d = new Date();
     d.setHours(0,0,0,0);
@@ -99,7 +99,6 @@ export default function HaftalikPlan({ haftalikPlan, tarifler, menuler, planTemi
             <div className="md:col-span-2 space-y-6">
               {gununTarifleri.map(tarif => (
                 <div key={tarif.id} className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                  {/* YENİ: Tarif detayına zıplama butonu eklendi */}
                   <div className="flex justify-between items-start mb-4">
                     <div>
                       <h3 className="text-xl font-bold text-slate-800 flex items-center">
@@ -120,13 +119,25 @@ export default function HaftalikPlan({ haftalikPlan, tarifler, menuler, planTemi
                   <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
                     <h4 className="font-bold text-slate-700 text-sm mb-3 border-b border-slate-200 pb-1">Hazırlanışı:</h4>
                     {Array.isArray(tarif.hazirlanis) ? (
-                      <ul className="space-y-2 text-sm text-slate-600 leading-relaxed">
-                        {tarif.hazirlanis.map((adim, i) => adim.trim() && (
-                          <li key={i} className="flex gap-2">
-                            <span className="font-bold text-orange-600 shrink-0">{i+1}.</span>
-                            <span>{adim}</span>
-                          </li>
-                        ))}
+                      <ul className="space-y-4">
+                        {tarif.hazirlanis.map((adim, i) => {
+                          const metin = typeof adim === 'string' ? adim : adim.metin;
+                          const resim = typeof adim === 'object' ? adim.resim : null;
+                          if (!metin || !metin.trim()) return null;
+                          return (
+                            <li key={i} className="flex gap-3 items-start border-b border-slate-50 pb-2 last:border-0">
+                              <span className="font-extrabold text-orange-600 bg-orange-100 w-6 h-6 flex items-center justify-center rounded-full shrink-0">{i+1}</span>
+                              <div className="flex-1">
+                                <p className="mt-0.5">{metin}</p>
+                                {resim && (
+                                  <button onClick={() => setAcikResim(resim)} className="mt-2 flex items-center gap-1 text-[11px] bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-100 border border-blue-100 font-bold transition-colors shadow-sm w-fit">
+                                    <ImageIcon size={14} /> Fotoğrafı Aç
+                                  </button>
+                                )}
+                              </div>
+                            </li>
+                          );
+                        })}
                       </ul>
                     ) : (
                       <p className="whitespace-pre-wrap text-sm text-slate-600 leading-relaxed">{tarif.hazirlanis}</p>
@@ -143,7 +154,6 @@ export default function HaftalikPlan({ haftalikPlan, tarifler, menuler, planTemi
             <h1 className="text-3xl font-extrabold uppercase tracking-wider mb-2">Günlük Mutfak Programı</h1>
             <p className="text-xl font-bold text-gray-700">{gunObj.gunFormat} {gunObj.gunIsim}</p>
           </div>
-
           <div className="mb-8">
             <h2 className="text-2xl font-bold border-b-2 border-gray-400 mb-4 pb-1">Günlük İhtiyaç Listesi</h2>
             <div className="flex flex-col space-y-4">
@@ -156,13 +166,11 @@ export default function HaftalikPlan({ haftalikPlan, tarifler, menuler, planTemi
               ))}
             </div>
           </div>
-
           <div className="break-before-page">
             <div className="text-center border-b-2 border-black pb-4 mb-6 pt-4">
               <h1 className="text-3xl font-extrabold uppercase tracking-wider mb-2">Tarifler ve Yapılışları</h1>
               <p className="text-lg font-medium text-gray-700">{gunObj.gunFormat} {gunObj.gunIsim}</p>
             </div>
-            
             {gununTarifleri.map(t => (
               <div key={t.id} className="mb-8 break-inside-avoid border border-gray-300 p-4 rounded-lg">
                 <h3 className="text-xl font-bold mb-3 flex items-center bg-gray-100 p-2 rounded">{t.ad}</h3>
@@ -174,7 +182,10 @@ export default function HaftalikPlan({ haftalikPlan, tarifler, menuler, planTemi
                   <strong className="block mb-2">Hazırlanışı:</strong>
                   {Array.isArray(t.hazirlanis) ? (
                     <ol className="list-decimal pl-5 space-y-1 text-sm">
-                      {t.hazirlanis.map((adim, i) => adim.trim() && <li key={i}>{adim}</li>)}
+                      {t.hazirlanis.map((adim, i) => {
+                        const metin = typeof adim === 'string' ? adim : adim.metin;
+                        return metin && metin.trim() ? <li key={i}>{metin}</li> : null;
+                      })}
                     </ol>
                   ) : <p className="text-sm">{t.hazirlanis}</p>}
                 </div>
@@ -190,9 +201,7 @@ export default function HaftalikPlan({ haftalikPlan, tarifler, menuler, planTemi
     <div>
       <div className="animate-in fade-in duration-300 mb-12 print:hidden">
         <div className="flex flex-col sm:flex-row justify-between items-center mb-6 bg-white p-4 rounded-xl shadow-sm border border-slate-200 gap-4">
-          <h2 className="text-xl font-bold text-orange-800 flex items-center">
-            <CalendarDays className="mr-2" size={24} /> Haftalık Menü Planı
-          </h2>
+          <h2 className="text-xl font-bold text-orange-800 flex items-center"><CalendarDays className="mr-2" size={24} /> Haftalık Menü Planı</h2>
           <div className="flex items-center gap-3">
             <button onClick={() => haftaDegistir(-1)} className="p-2 bg-orange-50 hover:bg-orange-100 text-orange-800 rounded-lg border border-orange-200 transition-colors"><ChevronLeft size={20} /></button>
             <span className="font-bold text-sm sm:text-base text-slate-700 min-w-[200px] text-center">{haftaAraligiMetni}</span>
@@ -219,9 +228,7 @@ export default function HaftalikPlan({ haftalikPlan, tarifler, menuler, planTemi
                       <span className="block font-bold text-slate-800 text-sm xl:text-base">{gun.gunFormat}</span>
                       <span className="text-xs text-slate-500 font-medium">{gun.gunIsim}</span>
                     </div>
-                    {planKaydi && (
-                      <button onClick={() => planTemizle(gun.isoStr)} className="text-slate-400 hover:text-red-600 bg-slate-50 hover:bg-red-50 p-1.5 rounded-lg transition-colors" title="Tüm Günü Temizle"><Trash2 size={16} /></button>
-                    )}
+                    {planKaydi && <button onClick={() => planTemizle(gun.isoStr)} className="text-slate-400 hover:text-red-600 bg-slate-50 hover:bg-red-50 p-1.5 rounded-lg transition-colors" title="Tüm Günü Temizle"><Trash2 size={16} /></button>}
                   </div>
 
                   {planKaydi ? (
@@ -247,9 +254,7 @@ export default function HaftalikPlan({ haftalikPlan, tarifler, menuler, planTemi
                           <div className="space-y-1.5">
                             {ekstraTarifler.map(t => (
                               <div key={t.id} className="bg-white p-1.5 rounded-lg border border-blue-50 flex justify-between items-center shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
-                                <div className="flex flex-col truncate pr-2">
-                                  <span className="font-bold text-slate-700 text-[10px] truncate">{t.ad}</span>
-                                </div>
+                                <div className="flex flex-col truncate pr-2"><span className="font-bold text-slate-700 text-[10px] truncate">{t.ad}</span></div>
                                 <button onClick={() => plandanOgeSil(gun.isoStr, 'tarif', t)} className="text-red-400 hover:text-red-600 hover:bg-red-50 p-1 rounded transition-colors shrink-0"><X size={14}/></button>
                               </div>
                             ))}
@@ -257,16 +262,11 @@ export default function HaftalikPlan({ haftalikPlan, tarifler, menuler, planTemi
                         </div>
                       )}
                     </div>
-                  ) : (
-                    <div className="text-center py-8 text-slate-300 text-xs italic">Plan yok</div>
-                  )}
+                  ) : <div className="text-center py-8 text-slate-300 text-xs italic">Plan yok</div>}
                 </div>
 
                 {planKaydi && (
-                  <button 
-                    onClick={() => setDetayGosterilenGun(gun.isoStr)} 
-                    className="w-full mt-3 bg-blue-50 hover:bg-blue-100 text-blue-700 p-2 rounded-lg text-xs font-bold flex items-center justify-center transition-colors border border-blue-100"
-                  >
+                  <button onClick={() => setDetayGosterilenGun(gun.isoStr)} className="w-full mt-3 bg-blue-50 hover:bg-blue-100 text-blue-700 p-2 rounded-lg text-xs font-bold flex items-center justify-center transition-colors border border-blue-100">
                     Günün Detayını Gör →
                   </button>
                 )}
@@ -277,18 +277,10 @@ export default function HaftalikPlan({ haftalikPlan, tarifler, menuler, planTemi
 
         <div className="bg-orange-50 p-6 rounded-2xl border border-orange-200 shadow-sm">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b border-orange-200 pb-4 gap-4">
-            <h3 className="text-xl font-bold text-orange-900 flex items-center">
-              <ShoppingCart className="mr-2 text-orange-600" size={24} /> Toplu Alışveriş Listesi
-            </h3>
-            {haftalikAlisveris.length > 0 && (
-              <button onClick={() => window.print()} className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold flex items-center shadow-md transition-colors w-full sm:w-auto justify-center">
-                <Printer size={18} className="mr-2" /> PDF / Çıktı Al
-              </button>
-            )}
+            <h3 className="text-xl font-bold text-orange-900 flex items-center"><ShoppingCart className="mr-2 text-orange-600" size={24} /> Toplu Alışveriş Listesi</h3>
+            {haftalikAlisveris.length > 0 && <button onClick={() => window.print()} className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold flex items-center shadow-md transition-colors w-full sm:w-auto justify-center"><Printer size={18} className="mr-2" /> PDF / Çıktı Al</button>}
           </div>
-          {haftalikAlisveris.length === 0 ? (
-            <p className="text-sm text-slate-500 italic">Bu hafta için henüz planlanmış bir menü bulunmuyor.</p>
-          ) : (
+          {haftalikAlisveris.length === 0 ? <p className="text-sm text-slate-500 italic">Bu hafta için henüz planlanmış bir menü bulunmuyor.</p> : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               {haftalikAlisveris.map((item, idx) => (
                 <div key={idx} className="bg-white p-3 rounded-xl border border-orange-100 shadow-sm flex justify-between items-center">

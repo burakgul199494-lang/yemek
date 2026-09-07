@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { CalendarDays, ChevronLeft, ChevronRight, ShoppingCart, Trash2, Printer, X, ArrowLeft, ChefHat } from 'lucide-react';
 
-export default function HaftalikPlan({ haftalikPlan, tarifler, menuler, planTemizle, plandanOgeSil, getGunlukTopluMalzemeler }) {
+export default function HaftalikPlan({ haftalikPlan, tarifler, menuler, planTemizle, plandanOgeSil, getGunlukTopluMalzemeler, setAktifSekme, setDetayGosterilenTarif, setNeredenGeldi }) {
   const [aktifPazartesi, setAktifPazartesi] = useState(() => {
     const d = new Date();
     d.setHours(0,0,0,0);
@@ -59,7 +59,6 @@ export default function HaftalikPlan({ haftalikPlan, tarifler, menuler, planTemi
 
   const haftalikAlisveris = getHaftalikTopluMalzemeler();
 
-  // GÜNLÜK DETAY EKRANI
   if (detayGosterilenGun) {
     const gunObj = haftaninGunleri.find(g => g.isoStr === detayGosterilenGun) || { gunFormat: detayGosterilenGun, gunIsim: '' };
     const planKaydi = haftalikPlan[detayGosterilenGun];
@@ -100,9 +99,24 @@ export default function HaftalikPlan({ haftalikPlan, tarifler, menuler, planTemi
             <div className="md:col-span-2 space-y-6">
               {gununTarifleri.map(tarif => (
                 <div key={tarif.id} className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                  <h3 className="text-xl font-bold text-slate-800 flex items-center mb-4">
-                    <ChefHat className="mr-2 text-orange-500" size={22}/> {tarif.ad}
-                  </h3>
+                  {/* YENİ: Tarif detayına zıplama butonu eklendi */}
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 className="text-xl font-bold text-slate-800 flex items-center">
+                        <ChefHat className="mr-2 text-orange-500" size={22}/> {tarif.ad}
+                      </h3>
+                      <span className="text-xs text-orange-700 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded-full font-medium inline-block mt-2">
+                        {tarif.kategori}
+                      </span>
+                    </div>
+                    <button 
+                      onClick={() => { setDetayGosterilenTarif(tarif); setNeredenGeldi('plan'); setAktifSekme('tarifler'); }}
+                      className="text-xs text-blue-600 font-bold bg-blue-50 hover:bg-blue-100 px-3 py-2 rounded-lg border border-blue-200 transition-colors shrink-0 ml-2 shadow-sm"
+                    >
+                      Tam Detayı Gör →
+                    </button>
+                  </div>
+
                   <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
                     <h4 className="font-bold text-slate-700 text-sm mb-3 border-b border-slate-200 pb-1">Hazırlanışı:</h4>
                     {Array.isArray(tarif.hazirlanis) ? (
@@ -124,13 +138,10 @@ export default function HaftalikPlan({ haftalikPlan, tarifler, menuler, planTemi
           </div>
         </div>
 
-        {/* YENİ GÜNLÜK DETAY YAZDIRMA (PDF) ŞABLONU (Menülerim ile birebir aynı yapıda) */}
         <div className="hidden print:block print:w-full print:bg-white print:text-black print:p-4">
-          
-          {/* İLK SAYFA: LİSTE */}
-          <div className="text-center border-b-2 border-black pb-4 mb-6">
+          <div className="text-center border-b-4 border-black pb-4 mb-6">
             <h1 className="text-3xl font-extrabold uppercase tracking-wider mb-2">Günlük Mutfak Programı</h1>
-            <p className="text-lg font-medium text-gray-700">{gunObj.gunFormat} {gunObj.gunIsim}</p>
+            <p className="text-xl font-bold text-gray-700">{gunObj.gunFormat} {gunObj.gunIsim}</p>
           </div>
 
           <div className="mb-8">
@@ -146,7 +157,6 @@ export default function HaftalikPlan({ haftalikPlan, tarifler, menuler, planTemi
             </div>
           </div>
 
-          {/* İKİNCİ SAYFA: TARİFLER VE YAPILIŞLARI */}
           <div className="break-before-page">
             <div className="text-center border-b-2 border-black pb-4 mb-6 pt-4">
               <h1 className="text-3xl font-extrabold uppercase tracking-wider mb-2">Tarifler ve Yapılışları</h1>
@@ -176,7 +186,6 @@ export default function HaftalikPlan({ haftalikPlan, tarifler, menuler, planTemi
     );
   }
 
-  // ANA HAFTALIK PLAN GÖRÜNÜMÜ
   return (
     <div>
       <div className="animate-in fade-in duration-300 mb-12 print:hidden">

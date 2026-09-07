@@ -17,7 +17,14 @@ export default function HaftalikPlan({ haftalikPlan, tarifler, planSil }) {
     for (let i = 0; i < 7; i++) {
       const g = new Date(pazartesiTarih);
       g.setDate(pazartesiTarih.getDate() + i);
-      const isoStr = g.toISOString().split('T')[0]; // YYYY-MM-DD
+      
+      // SAAT DİLİMİ (TIMEZONE) KAYMASINI ÖNLEYEN YENİ KOD
+      // Artık evrensel saate çevirmek yerine doğrudan yerel YYYY-MM-DD formatını üretiyoruz.
+      const yyyy = g.getFullYear();
+      const mm = String(g.getMonth() + 1).padStart(2, '0');
+      const dd = String(g.getDate()).padStart(2, '0');
+      const isoStr = `${yyyy}-${mm}-${dd}`; 
+
       const gosterimStr = g.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', weekday: 'long' });
       gunler.push({ isoStr, gosterimStr });
     }
@@ -39,7 +46,6 @@ export default function HaftalikPlan({ haftalikPlan, tarifler, planSil }) {
       const planItem = haftalikPlan[gun.isoStr];
       if (!planItem) return;
       
-      // Kaydedilen menüdeki veya tariflerdeki yemekleri çöz
       const tarifIDleri = planItem.tarifler || [];
       tarifIDleri.forEach(tId => {
         const tarif = tarifler.find(t => t.id === tId);
@@ -84,7 +90,7 @@ export default function HaftalikPlan({ haftalikPlan, tarifler, planSil }) {
       {/* Günlük Kartlar */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {haftaninGunleri.map(gun => {
-          const planKaydi = haftalikPlan[gun.isoStr]; // { menuAdi, tarifler: [...] }
+          const planKaydi = haftalikPlan[gun.isoStr];
           const planlananTarifler = planKaydi ? planKaydi.tarifler.map(id => tarifler.find(t => t.id === id)).filter(Boolean) : [];
 
           return (

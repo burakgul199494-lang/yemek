@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { ArrowLeft, ShoppingCart, ChefHat, Check, Calendar, Folder, Search, Layers } from 'lucide-react';
+import { ArrowLeft, ShoppingCart, ChefHat, Calendar, Folder, Search, Layers } from 'lucide-react';
 
 export default function Menulerim({ 
   menuler, tarifler, getGunlukTopluMalzemeler, 
   setAktifSekme, setDetayGosterilenTarif,
   detayMenu, setDetayMenu, setNeredenGeldi,
-  tariheMenuEkle, menuKategorileri = []
+  tariheEkle, menuKategorileri = [], sonTarihMenu
 }) {
   const [planTarihSecildi, setPlanTarihSecildi] = useState('');
   const [planModalAcik, setPlanModalAcik] = useState(false);
@@ -15,7 +15,6 @@ export default function Menulerim({
   
   const [genelMenuArama, setGenelMenuArama] = useState('');
 
-  // 1. GÖRÜNÜM: MENÜ DETAYI
   if (detayMenu) {
     const menuTarifleri = detayMenu.tarifler.map(id => tarifler.find(t => t.id === id)).filter(Boolean);
     const alisverisListesi = getGunlukTopluMalzemeler(menuTarifleri);
@@ -23,10 +22,11 @@ export default function Menulerim({
     const takvimeIsle = (e) => {
       e.preventDefault();
       if (!planTarihSecildi) return;
-      tariheMenuEkle(planTarihSecildi, detayMenu);
+      // YENİ: Tekil formüle bağladık
+      tariheEkle(planTarihSecildi, 'menu', detayMenu);
       setPlanModalAcik(false);
       setPlanTarihSecildi('');
-      alert(`"${detayMenu.ad}" menüsü ${planTarihSecildi} tarihine başarıyla planlandı!`);
+      alert(`"${detayMenu.ad}" menüsü ${planTarihSecildi} tarihine başarıyla eklendi!`);
     };
 
     return (
@@ -101,8 +101,8 @@ export default function Menulerim({
         {planModalAcik && (
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[110] p-4">
             <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full">
-              <h3 className="text-lg font-bold text-slate-800 mb-3">Hangi Güne Planlansın?</h3>
-              <p className="text-xs text-slate-500 mb-4">İstediğin ileri bir tarihi veya haftayı seçebilirsin.</p>
+              <h3 className="text-lg font-bold text-slate-800 mb-3">Bu Menü Hangi Güne Eklensin?</h3>
+              <p className="text-xs text-slate-500 mb-4">Seçtiğiniz tarihe menüdeki tüm yemekler eklenecektir.</p>
               <form onSubmit={takvimeIsle} className="space-y-4">
                 <input 
                   type="date" required value={planTarihSecildi} onChange={(e) => setPlanTarihSecildi(e.target.value)} 
@@ -110,7 +110,7 @@ export default function Menulerim({
                 />
                 <div className="flex justify-end gap-2">
                   <button type="button" onClick={() => setPlanModalAcik(false)} className="px-4 py-2 bg-slate-100 rounded-xl font-bold text-slate-600 text-sm">İptal</button>
-                  <button type="submit" className="px-5 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-xl font-bold text-sm shadow-sm">Planı Kaydet</button>
+                  <button type="submit" className="px-5 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-xl font-bold text-sm shadow-sm">Plana Ekle</button>
                 </div>
               </form>
             </div>
@@ -120,11 +120,8 @@ export default function Menulerim({
     );
   }
 
-  // 2. GÖRÜNÜM: BİR KLASÖRÜN İÇİNDEKİ MENÜLER
   if (menuKlasoru) {
     const q = menuArama.toLowerCase();
-    
-    // YENİ: Hem menü isminde hem de içindeki yemeklerin isminde arama yapar
     const filtrelenmisMenuler = menuler.filter(m => {
       if (m.kategori !== menuKlasoru) return false;
       const menuAdiUyuyor = m.ad.toLowerCase().includes(q);
@@ -149,10 +146,8 @@ export default function Menulerim({
         <div className="relative mb-6">
           <Search size={20} className="absolute left-4 top-3.5 text-slate-400" />
           <input 
-            type="text" 
-            placeholder={`"${menuKlasoru}" içinde menü veya yemek ara...`} 
-            value={menuArama} 
-            onChange={(e) => setMenuArama(e.target.value)} 
+            type="text" placeholder={`"${menuKlasoru}" içinde menü veya yemek ara...`} 
+            value={menuArama} onChange={(e) => setMenuArama(e.target.value)} 
             className="w-full pl-12 p-3 border border-orange-200 rounded-xl outline-none focus:ring-2 focus:ring-orange-500 shadow-sm text-base" 
           />
         </div>
@@ -170,7 +165,12 @@ export default function Menulerim({
                       <Layers size={24} className="text-orange-500 group-hover:text-white transition-colors" />
                     </div>
                     <div className="flex-1 min-w-0 pr-2 flex flex-col items-start">
-                      <h3 className="text-base sm:text-lg font-bold text-slate-800 truncate">{menu.ad}</h3>
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 w-full">
+                        <h3 className="text-base sm:text-lg font-bold text-slate-800 truncate">{menu.ad}</h3>
+                        <span className="text-[10px] sm:text-xs text-orange-700 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded font-medium w-max">{menu.kategori}</span>
+                        {/* YENİ: Menünün en son yendiği tarih */}
+                        <span className="text-[10px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded flex items-center w-max"><Calendar size={12} className="mr-1"/> Son: {sonTarihMenu(menu.ad) || 'Yok'}</span>
+                      </div>
                       <p className="text-xs sm:text-sm text-slate-500 truncate w-full mt-1">{icerik || "Menü boş"}</p>
                     </div>
                   </div>
@@ -183,7 +183,6 @@ export default function Menulerim({
     );
   }
 
-  // YENİ: GENEL ARAMA İÇİN AYNI MANTIK (Tüm klasörlerdeki yemekleri ve menüleri tarar)
   const gQ = genelMenuArama.toLowerCase();
   const genelFiltrelenmisMenuler = menuler.filter(m => {
     const menuAdiUyuyor = m.ad.toLowerCase().includes(gQ);
@@ -203,10 +202,8 @@ export default function Menulerim({
       <div className="relative mb-6">
         <Search size={20} className="absolute left-4 top-3.5 text-slate-400" />
         <input 
-          type="text" 
-          placeholder="Tüm menülerde menü ismi veya yemek ara..." 
-          value={genelMenuArama} 
-          onChange={(e) => setGenelMenuArama(e.target.value)} 
+          type="text" placeholder="Tüm menülerde menü ismi veya yemek ara..." 
+          value={genelMenuArama} onChange={(e) => setGenelMenuArama(e.target.value)} 
           className="w-full pl-12 p-3 border border-orange-200 rounded-xl outline-none focus:ring-2 focus:ring-orange-500 shadow-sm text-base bg-white" 
         />
       </div>
@@ -228,6 +225,8 @@ export default function Menulerim({
                       <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 w-full">
                         <h3 className="text-base sm:text-lg font-bold text-slate-800 truncate">{menu.ad}</h3>
                         <span className="text-[10px] sm:text-xs text-orange-700 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded font-medium w-max">{menu.kategori}</span>
+                        {/* YENİ: Menünün en son yendiği tarih */}
+                        <span className="text-[10px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded flex items-center w-max"><Calendar size={12} className="mr-1"/> Son: {sonTarihMenu(menu.ad) || 'Yok'}</span>
                       </div>
                       <p className="text-xs sm:text-sm text-slate-500 truncate w-full mt-1">{icerik || "Menü boş"}</p>
                     </div>

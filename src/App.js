@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { 
   ChefHat, PlusCircle, CalendarDays, 
-  Image as ImageIcon, X, List, Layers, ShoppingCart, ArrowLeft, Search, LogOut
+  Image as ImageIcon, List, Layers, ShoppingCart, ArrowLeft, Search, LogOut
 } from 'lucide-react';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { auth } from './firebase';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { auth, db } from './firebase';
 
 import YeniEkle from './components/YeniEkle';
 import Menulerim from './components/Menulerim';
@@ -30,24 +31,14 @@ const ornekTarifler = [
 export default function App() {
   const [kullanici, setKullanici] = useState(null);
   const [yukleniyor, setYukleniyor] = useState(true);
+  const [veriYuklendi, setVeriYuklendi] = useState(false); // Buluttan veri geldi mi?
 
   const [aktifSekme, setAktifSekme] = useState('ekle'); 
 
-  const [tarifler, setTarifler] = useState(() => {
-    const kayitli = localStorage.getItem('tarifler');
-    return kayitli ? JSON.parse(kayitli) : ornekTarifler;
-  });
-
-  const [menuler, setMenuler] = useState(() => {
-    const kayitli = localStorage.getItem('menuler');
-    return kayitli ? JSON.parse(kayitli) : [];
-  });
-
-  // Tarih bazlı plan state'i: { "2026-09-07": { menuAdi: "Pazartesi Menüsü", tarifler: ["1", "2"] } }
-  const [haftalikPlan, setHaftalikPlan] = useState(() => {
-    const kayitli = localStorage.getItem('haftalikPlan');
-    return kayitli ? JSON.parse(kayitli) : {};
-  });
+  // LOCALSTORAGE YERİNE BOŞ BAŞLANGIÇ DURUMLARI (Buluttan dolacak)
+  const [tarifler, setTarifler] = useState([]);
+  const [menuler, setMenuler] = useState([]);
+  const [haftalikPlan, setHaftalikPlan] = useState({});
 
   const [seciliKategori, setSeciliKategori] = useState('Tümü');
   const [tarifArama, setTarifArama] = useState('');
@@ -58,17 +49,45 @@ export default function App() {
   const [modal, setModal] = useState({ acik: false, tip: '', mesaj: '', onOnay: null });
   const [yeniTarif, setYeniTarif] = useState({ ad: '', kategori: 'Ana Yemek', resim: '', malzemeler: [{ miktar: '', birim: 'gr', isim: '' }], hazirlanis: [''] });
 
+  // 1. GİRİŞ KONTROLÜ VE BULUTTAN VERİ ÇEKME
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setKullanici(currentUser);
+      if (currentUser) {
+        // Kullanıcı giriş yaptıysa Firestore'dan kendi verisini çek
+        const docRef = doc(db, "kullanicilar", currentUser.uid);
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          setTarifler(data.tarifler || ornekTarifler);
+          setMenuler(data.menuler || []);
+          setHaftalikPlan(data.haftalikPlan || {});
+        } else {
+          // İlk kez giriş yapan kullanıcı için örnek veriler
+          setTarifler(ornekTarifler);
+          setMenuler([]);
+          setHaftalikPlan({});
+        }
+        setVeriYuklendi(true);
+      } else {
+        setVeriYuklendi(false);
+      }
       setYukleniyor(false);
     });
     return () => unsubscribe();
   }, []);
 
-  useEffect(() => localStorage.setItem('tarifler', JSON.stringify(tarifler)), [tarifler]);
-  useEffect(() => localStorage.setItem('haftalikPlan', JSON.stringify(haftalikPlan)), [haftalikPlan]);
-  useEffect(() => localStorage.setItem('menuler', JSON.stringify(menuler)), [menuler]);
+  // 2. VERİ DEĞİŞTİĞİNDE BULUTA (FIRESTORE) KAYDET
+  useEffect(() => {
+    if (kullanici && veriYuklendi) {
+      setDoc(doc(db, "kullanicilar", kullanici.uid), {
+        tarifler,
+        menuler,
+        haftalikPlan
+      });
+    }
+  }, [tarifler, menuler, haftalikPlan, kullanici, veriYuklendi]);
 
   const cikisYap = () => { signOut(auth); };
 
@@ -158,7 +177,6 @@ export default function App() {
     });
   };
 
-  // Menü detayından çağrılan tarihe planlama fonksiyonu
   const tariheMenuEkle = (tarihStr, menuObjesi) => {
     setHaftalikPlan(prev => ({
       ...prev,

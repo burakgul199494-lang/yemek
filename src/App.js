@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   ChefHat, PlusCircle, CalendarDays, 
-  Image as ImageIcon, List, Layers, ShoppingCart, ArrowLeft, Search, LogOut
+  Image as ImageIcon, List, Layers, ShoppingCart, ArrowLeft, Search, LogOut, Folder
 } from 'lucide-react';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
@@ -12,62 +12,49 @@ import Menulerim from './components/Menulerim';
 import HaftalikPlan from './components/HaftalikPlan';
 import Login from './components/Login';
 
-const KATEGORILER = ['Çorba', 'Ana Yemek', 'Zeytinyağlı', 'Ara Sıcak', 'Salata/Meze', 'Tatlı', 'Kahvaltılık'];
 const BIRIMLER = ['gr', 'kg', 'ml', 'Litre', 'adet', 'yemek kaşığı', 'tatlı kaşığı', 'çay kaşığı', 'su bardağı', 'çay bardağı', 'tutam', 'paket'];
-
-const ornekTarifler = [
-  {
-    id: '1', ad: 'Tavuklu Bezelye', kategori: 'Ana Yemek', resim: '', 
-    malzemeler: [
-      { miktar: '500', birim: 'gr', isim: 'Kuşbaşı Tavuk Göğsü' },
-      { miktar: '2', birim: 'su bardağı', isim: 'Bezelye' },
-      { miktar: '1', birim: 'adet', isim: 'Havuç' },
-      { miktar: '1', birim: 'yemek kaşığı', isim: 'Domates Salçası' }
-    ],
-    hazirlanis: ["Tencereye sıvı yağı ve tavukları alın, kavurun.", "Salçayı ekleyip kokusu çıkana kadar kavurun.", "Havuç ve bezelyeleri ekleyin.", "Sıcak su ekleyip pişirin."]
-  }
-];
 
 export default function App() {
   const [kullanici, setKullanici] = useState(null);
   const [yukleniyor, setYukleniyor] = useState(true);
-  const [veriYuklendi, setVeriYuklendi] = useState(false); // Buluttan veri geldi mi?
+  const [veriYuklendi, setVeriYuklendi] = useState(false); 
 
   const [aktifSekme, setAktifSekme] = useState('ekle'); 
 
-  // LOCALSTORAGE YERİNE BOŞ BAŞLANGIÇ DURUMLARI (Buluttan dolacak)
   const [tarifler, setTarifler] = useState([]);
   const [menuler, setMenuler] = useState([]);
   const [haftalikPlan, setHaftalikPlan] = useState({});
+  
+  // DİNAMİK KATEGORİLER
+  const [yemekKategorileri, setYemekKategorileri] = useState(['Çorba', 'Ana Yemek', 'Zeytinyağlı', 'Ara Sıcak', 'Salata/Meze', 'Tatlı', 'Kahvaltılık', 'Kategorisiz']);
+  const [menuKategorileri, setMenuKategorileri] = useState(['Günlük', 'Hafif Menü', 'Ağır Menü', 'Misafir', 'Hafta Sonu', 'Kategorisiz']);
 
-  const [seciliKategori, setSeciliKategori] = useState('Tümü');
+  // KLASÖR NAVİGASYON STATELERİ
+  const [tarifKlasoru, setTarifKlasoru] = useState(null); 
   const [tarifArama, setTarifArama] = useState('');
   const [detayGosterilenTarif, setDetayGosterilenTarif] = useState(null);
+  
   const [detayMenu, setDetayMenu] = useState(null);
   const [neredenGeldi, setNeredenGeldi] = useState(null);
-  const [yeniMenu, setYeniMenu] = useState({ ad: '', tarifler: [] });
+  
+  const [yeniMenu, setYeniMenu] = useState({ ad: '', kategori: 'Günlük', tarifler: [] });
   const [modal, setModal] = useState({ acik: false, tip: '', mesaj: '', onOnay: null });
   const [yeniTarif, setYeniTarif] = useState({ ad: '', kategori: 'Ana Yemek', resim: '', malzemeler: [{ miktar: '', birim: 'gr', isim: '' }], hazirlanis: [''] });
 
-  // 1. GİRİŞ KONTROLÜ VE BULUTTAN VERİ ÇEKME
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setKullanici(currentUser);
       if (currentUser) {
-        // Kullanıcı giriş yaptıysa Firestore'dan kendi verisini çek
         const docRef = doc(db, "kullanicilar", currentUser.uid);
         const docSnap = await getDoc(docRef);
         
         if (docSnap.exists()) {
           const data = docSnap.data();
-          setTarifler(data.tarifler || ornekTarifler);
+          setTarifler(data.tarifler || []);
           setMenuler(data.menuler || []);
           setHaftalikPlan(data.haftalikPlan || {});
-        } else {
-          // İlk kez giriş yapan kullanıcı için örnek veriler
-          setTarifler(ornekTarifler);
-          setMenuler([]);
-          setHaftalikPlan({});
+          if(data.yemekKategorileri) setYemekKategorileri(data.yemekKategorileri);
+          if(data.menuKategorileri) setMenuKategorileri(data.menuKategorileri);
         }
         setVeriYuklendi(true);
       } else {
@@ -78,16 +65,13 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
-  // 2. VERİ DEĞİŞTİĞİNDE BULUTA (FIRESTORE) KAYDET
   useEffect(() => {
     if (kullanici && veriYuklendi) {
       setDoc(doc(db, "kullanicilar", kullanici.uid), {
-        tarifler,
-        menuler,
-        haftalikPlan
+        tarifler, menuler, haftalikPlan, yemekKategorileri, menuKategorileri
       });
     }
-  }, [tarifler, menuler, haftalikPlan, kullanici, veriYuklendi]);
+  }, [tarifler, menuler, haftalikPlan, yemekKategorileri, menuKategorileri, kullanici, veriYuklendi]);
 
   const cikisYap = () => { signOut(auth); };
 
@@ -138,7 +122,7 @@ export default function App() {
     } else {
       setTarifler([...tarifler, { ...eklenecekTarif, id: Date.now().toString() }]);
     }
-    setYeniTarif({ ad: '', kategori: 'Ana Yemek', resim: '', malzemeler: [{ miktar: '', birim: 'gr', isim: '' }], hazirlanis: [''] });
+    setYeniTarif({ ad: '', kategori: yemekKategorileri[0] || 'Kategorisiz', resim: '', malzemeler: [{ miktar: '', birim: 'gr', isim: '' }], hazirlanis: [''] });
   };
 
   const tarifSil = (id) => {
@@ -167,7 +151,7 @@ export default function App() {
     } else {
       setMenuler([...menuler, { ...yeniMenu, id: Date.now().toString() }]);
     }
-    setYeniMenu({ ad: '', tarifler: [] });
+    setYeniMenu({ ad: '', kategori: menuKategorileri[0] || 'Kategorisiz', tarifler: [] });
   };
 
   const menuSil = (id) => {
@@ -177,19 +161,35 @@ export default function App() {
     });
   };
 
+  const kategoriSil = (tip, silinecek) => {
+    if (silinecek === 'Kategorisiz') return;
+    setModal({
+      acik: true, tip: 'onay', mesaj: `"${silinecek}" kategorisini silmek istediğinize emin misiniz? İçindeki ögeler 'Kategorisiz' olarak güncellenecek.`,
+      onOnay: () => {
+        if (tip === 'yemek') {
+          setYemekKategorileri(prev => prev.filter(k => k !== silinecek));
+          setTarifler(prev => prev.map(t => t.kategori === silinecek ? {...t, kategori: 'Kategorisiz'} : t));
+        } else {
+          setMenuKategorileri(prev => prev.filter(k => k !== silinecek));
+          setMenuler(prev => prev.map(m => m.kategori === silinecek ? {...m, kategori: 'Kategorisiz'} : m));
+        }
+      }
+    });
+  };
+
+  const kategoriEkle = (tip, yeniAd) => {
+    const ad = yeniAd.trim();
+    if (!ad) return;
+    if (tip === 'yemek' && !yemekKategorileri.includes(ad)) setYemekKategorileri([...yemekKategorileri, ad]);
+    if (tip === 'menu' && !menuKategorileri.includes(ad)) setMenuKategorileri([...menuKategorileri, ad]);
+  };
+
   const tariheMenuEkle = (tarihStr, menuObjesi) => {
-    setHaftalikPlan(prev => ({
-      ...prev,
-      [tarihStr]: { menuAdi: menuObjesi.ad, tarifler: menuObjesi.tarifler }
-    }));
+    setHaftalikPlan(prev => ({ ...prev, [tarihStr]: { menuAdi: menuObjesi.ad, tarifler: menuObjesi.tarifler } }));
   };
 
   const planSil = (tarihStr) => {
-    setHaftalikPlan(prev => {
-      const kopya = { ...prev };
-      delete kopya[tarihStr];
-      return kopya;
-    });
+    setHaftalikPlan(prev => { const kopya = { ...prev }; delete kopya[tarihStr]; return kopya; });
   };
 
   const getGunlukTopluMalzemeler = (gununTarifleri) => {
@@ -206,17 +206,12 @@ export default function App() {
     return Object.values(liste).sort((a,b) => a.isim.localeCompare(b.isim));
   };
 
-  const navClickEkle = () => { setAktifSekme('ekle'); setYeniTarif({ ad: '', kategori: 'Ana Yemek', resim: '', malzemeler: [{ miktar: '', birim: 'gr', isim: '' }], hazirlanis: [''] }); setYeniMenu({ ad: '', tarifler: [] }); setDetayGosterilenTarif(null); setNeredenGeldi(null); };
-  const navClickTarifler = () => { setAktifSekme('tarifler'); setDetayGosterilenTarif(null); setNeredenGeldi(null); };
+  const navClickEkle = () => { setAktifSekme('ekle'); setYeniTarif({ ad: '', kategori: yemekKategorileri[0] || 'Kategorisiz', resim: '', malzemeler: [{ miktar: '', birim: 'gr', isim: '' }], hazirlanis: [''] }); setYeniMenu({ ad: '', kategori: menuKategorileri[0] || 'Kategorisiz', tarifler: [] }); setDetayGosterilenTarif(null); setNeredenGeldi(null); };
+  const navClickTarifler = () => { setAktifSekme('tarifler'); setTarifKlasoru(null); setDetayGosterilenTarif(null); setNeredenGeldi(null); setTarifArama(''); };
   const navClickMenuler = () => { setAktifSekme('menuler'); setDetayMenu(null); setNeredenGeldi(null); };
 
-  if (yukleniyor) {
-    return <div className="min-h-screen bg-orange-50 flex items-center justify-center text-orange-600 font-bold">Yükleniyor...</div>;
-  }
-
-  if (!kullanici) {
-    return <Login />;
-  }
+  if (yukleniyor) return <div className="min-h-screen bg-orange-50 flex items-center justify-center text-orange-600 font-bold">Yükleniyor...</div>;
+  if (!kullanici) return <Login />;
 
   return (
     <div className="min-h-screen bg-orange-50 text-slate-800 font-sans pb-20 md:pb-6 print:pb-0 print:bg-white">
@@ -228,18 +223,10 @@ export default function App() {
           </div>
           
           <div className="hidden md:flex space-x-1">
-            <button onClick={navClickEkle} className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm transition-colors ${aktifSekme === 'ekle' ? 'bg-orange-700' : 'hover:bg-orange-500'}`}>
-              <PlusCircle size={18} /> <span>Yönetim / Ekle</span>
-            </button>
-            <button onClick={navClickTarifler} className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm transition-colors ${aktifSekme === 'tarifler' ? 'bg-orange-700' : 'hover:bg-orange-500'}`}>
-              <List size={18} /> <span>Tariflerim</span>
-            </button>
-            <button onClick={navClickMenuler} className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm transition-colors ${aktifSekme === 'menuler' ? 'bg-orange-700' : 'hover:bg-orange-500'}`}>
-              <Layers size={18} /> <span>Menülerim</span>
-            </button>
-            <button onClick={() => setAktifSekme('plan')} className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm transition-colors ${aktifSekme === 'plan' ? 'bg-orange-700' : 'hover:bg-orange-500'}`}>
-              <CalendarDays size={18} /> <span>Plan & Alışveriş</span>
-            </button>
+            <button onClick={navClickEkle} className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm transition-colors ${aktifSekme === 'ekle' ? 'bg-orange-700' : 'hover:bg-orange-500'}`}><PlusCircle size={18} /> <span>Yönetim / Ekle</span></button>
+            <button onClick={navClickTarifler} className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm transition-colors ${aktifSekme === 'tarifler' ? 'bg-orange-700' : 'hover:bg-orange-500'}`}><List size={18} /> <span>Tariflerim</span></button>
+            <button onClick={navClickMenuler} className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm transition-colors ${aktifSekme === 'menuler' ? 'bg-orange-700' : 'hover:bg-orange-500'}`}><Layers size={18} /> <span>Menülerim</span></button>
+            <button onClick={() => setAktifSekme('plan')} className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm transition-colors ${aktifSekme === 'plan' ? 'bg-orange-700' : 'hover:bg-orange-500'}`}><CalendarDays size={18} /> <span>Plan & Alışveriş</span></button>
           </div>
 
           <button onClick={cikisYap} className="flex items-center space-x-1 bg-red-500 hover:bg-red-600 px-3 py-2 rounded-lg text-sm font-bold transition-colors shadow-sm">
@@ -249,18 +236,10 @@ export default function App() {
       </nav>
 
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-[0_-5px_10px_rgba(0,0,0,0.05)] flex justify-between items-center px-1 py-2 z-50 pb-safe print:hidden">
-        <button onClick={navClickEkle} className={`flex-1 flex flex-col items-center p-2 rounded-lg text-[10px] ${aktifSekme === 'ekle' ? 'text-orange-600 font-bold' : 'text-slate-500 hover:text-orange-500'}`}>
-          <PlusCircle size={22} className="mb-1" /> Yönetim
-        </button>
-        <button onClick={navClickTarifler} className={`flex-1 flex flex-col items-center p-2 rounded-lg text-[10px] ${aktifSekme === 'tarifler' ? 'text-orange-600 font-bold' : 'text-slate-500 hover:text-orange-500'}`}>
-          <List size={22} className="mb-1" /> Tariflerim
-        </button>
-        <button onClick={navClickMenuler} className={`flex-1 flex flex-col items-center p-2 rounded-lg text-[10px] ${aktifSekme === 'menuler' ? 'text-orange-600 font-bold' : 'text-slate-500 hover:text-orange-500'}`}>
-          <Layers size={22} className="mb-1" /> Menüler
-        </button>
-        <button onClick={() => setAktifSekme('plan')} className={`flex-1 flex flex-col items-center p-2 rounded-lg text-[10px] ${aktifSekme === 'plan' ? 'text-orange-600 font-bold' : 'text-slate-500 hover:text-orange-500'}`}>
-          <CalendarDays size={22} className="mb-1" /> Plan
-        </button>
+        <button onClick={navClickEkle} className={`flex-1 flex flex-col items-center p-2 rounded-lg text-[10px] ${aktifSekme === 'ekle' ? 'text-orange-600 font-bold' : 'text-slate-500 hover:text-orange-500'}`}><PlusCircle size={22} className="mb-1" /> Yönetim</button>
+        <button onClick={navClickTarifler} className={`flex-1 flex flex-col items-center p-2 rounded-lg text-[10px] ${aktifSekme === 'tarifler' ? 'text-orange-600 font-bold' : 'text-slate-500 hover:text-orange-500'}`}><List size={22} className="mb-1" /> Tariflerim</button>
+        <button onClick={navClickMenuler} className={`flex-1 flex flex-col items-center p-2 rounded-lg text-[10px] ${aktifSekme === 'menuler' ? 'text-orange-600 font-bold' : 'text-slate-500 hover:text-orange-500'}`}><Layers size={22} className="mb-1" /> Menüler</button>
+        <button onClick={() => setAktifSekme('plan')} className={`flex-1 flex flex-col items-center p-2 rounded-lg text-[10px] ${aktifSekme === 'plan' ? 'text-orange-600 font-bold' : 'text-slate-500 hover:text-orange-500'}`}><CalendarDays size={22} className="mb-1" /> Plan</button>
       </div>
 
       <main className="max-w-5xl mx-auto p-4 sm:p-6 print:p-0 print:max-w-none">
@@ -269,87 +248,65 @@ export default function App() {
           <YeniEkle 
             yeniTarif={yeniTarif} setYeniTarif={setYeniTarif} yeniMenu={yeniMenu} setYeniMenu={setYeniMenu}
             tarifler={tarifler} menuler={menuler} tarifKaydet={tarifKaydet} menuKaydet={menuKaydet}
-            KATEGORILER={KATEGORILER} BIRIMLER={BIRIMLER} malzemeIslem={malzemeIslem} hazirlanisIslem={hazirlanisIslem}
-            resimYukle={resimYukle} menuTarifToggle={menuTarifToggle} tarifSil={tarifSil} menuSil={menuSil}
+            yemekKategorileri={yemekKategorileri} menuKategorileri={menuKategorileri} BIRIMLER={BIRIMLER} 
+            malzemeIslem={malzemeIslem} hazirlanisIslem={hazirlanisIslem} resimYukle={resimYukle} 
+            menuTarifToggle={menuTarifToggle} tarifSil={tarifSil} menuSil={menuSil} 
+            kategoriEkle={kategoriEkle} kategoriSil={kategoriSil}
           />
         )}
 
+        {/* KLASÖRLÜ YENİ TARİFLERİM SEKME YAPISI */}
         {aktifSekme === 'tarifler' && (
           <div className="animate-in fade-in duration-300">
             {detayGosterilenTarif ? (
               <div className="bg-white rounded-xl shadow-md overflow-hidden pb-4">
                 <div className="bg-orange-100 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                  <button 
-                    onClick={() => {
-                      setDetayGosterilenTarif(null);
-                      if (neredenGeldi === 'menuler') {
-                        setAktifSekme('menuler');
-                        setNeredenGeldi(null);
-                      }
-                    }} 
-                    className="flex items-center text-orange-800 hover:text-orange-600 font-medium"
-                  >
-                    <ArrowLeft size={20} className="mr-1"/> 
-                    {neredenGeldi === 'menuler' ? 'Menüye Dön' : 'Listeye Dön'}
+                  <button onClick={() => { setDetayGosterilenTarif(null); if (neredenGeldi === 'menuler') { setAktifSekme('menuler'); setNeredenGeldi(null); } }} className="flex items-center text-orange-800 hover:text-orange-600 font-medium">
+                    <ArrowLeft size={20} className="mr-1"/> {neredenGeldi === 'menuler' ? 'Menüye Dön' : 'Klasöre Dön'}
                   </button>
-                  <div className="flex items-center gap-3 w-full sm:w-auto justify-between">
-                    <span className="bg-orange-200 text-orange-800 px-3 py-1 rounded-full text-sm font-semibold truncate">{detayGosterilenTarif.kategori}</span>
-                  </div>
+                  <span className="bg-orange-200 text-orange-800 px-3 py-1 rounded-full text-sm font-semibold truncate">{detayGosterilenTarif.kategori}</span>
                 </div>
                 {detayGosterilenTarif.resim && <div className="w-full h-48 sm:h-64 bg-slate-200"><img src={detayGosterilenTarif.resim} alt={detayGosterilenTarif.ad} className="w-full h-full object-cover" /></div>}
-                
                 <div className="p-4 sm:p-8">
                   <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-6 border-b pb-4">{detayGosterilenTarif.ad}</h2>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="md:col-span-1 bg-orange-50 p-4 rounded-xl border border-orange-100">
                       <h3 className="text-lg font-bold text-orange-800 mb-4 flex items-center"><ShoppingCart className="mr-2" size={20}/> Malzemeler</h3>
                       <ul className="space-y-3 text-sm sm:text-base">
-                        {detayGosterilenTarif.malzemeler.map((m, i) => (
-                          <li key={i} className="flex items-start text-slate-700"><span className="text-orange-500 mr-2">•</span><span><b className="font-semibold">{m.miktar} {m.birim}</b> {m.isim}</span></li>
-                        ))}
+                        {detayGosterilenTarif.malzemeler.map((m, i) => <li key={i} className="flex items-start text-slate-700"><span className="text-orange-500 mr-2">•</span><span><b className="font-semibold">{m.miktar} {m.birim}</b> {m.isim}</span></li>)}
                       </ul>
                     </div>
                     <div className="md:col-span-2">
                       <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center"><ChefHat className="mr-2" size={20}/> Hazırlanışı</h3>
                       <div className="text-sm sm:text-base text-slate-700 leading-relaxed bg-white p-5 rounded-xl border border-slate-100 shadow-sm">
                         {Array.isArray(detayGosterilenTarif.hazirlanis) ? (
-                          <ul className="space-y-3">
-                            {detayGosterilenTarif.hazirlanis.map((adim, i) => adim.trim() && (
-                              <li key={i} className="flex gap-3">
-                                <span className="font-bold text-orange-600">{i+1}.</span>
-                                <span className="flex-1">{adim}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <p className="whitespace-pre-wrap">{detayGosterilenTarif.hazirlanis || "-"}</p>
-                        )}
+                          <ul className="space-y-3">{detayGosterilenTarif.hazirlanis.map((adim, i) => adim.trim() && <li key={i} className="flex gap-3"><span className="font-bold text-orange-600">{i+1}.</span><span className="flex-1">{adim}</span></li>)}</ul>
+                        ) : <p className="whitespace-pre-wrap">{detayGosterilenTarif.hazirlanis || "-"}</p>}
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-            ) : (
+            ) : tarifKlasoru ? (
+              // BİR KLASÖRÜN İÇİNDEKİ YEMEKLER (ALFABETİK)
               <>
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3 border-b-2 border-orange-200 pb-3">
-                  <h2 className="text-xl sm:text-2xl font-bold text-orange-800">Tarif Defterim</h2>
-                  <div className="flex w-full sm:w-auto gap-2">
-                    <div className="relative flex-1 sm:w-48">
-                      <Search size={16} className="absolute left-3 top-2.5 text-slate-400" />
-                      <input type="text" placeholder="Yemek Ara..." value={tarifArama} onChange={(e) => setTarifArama(e.target.value)} className="w-full pl-9 p-2 border border-orange-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-orange-500" />
-                    </div>
-                    <select value={seciliKategori} onChange={(e) => setSeciliKategori(e.target.value)} className="w-1/2 sm:w-32 p-2 border border-orange-300 rounded-lg text-slate-700 bg-white shadow-sm outline-none text-sm">
-                      <option value="Tümü">Kategoriler</option>
-                      {KATEGORILER.map(k => <option key={k} value={k}>{k}</option>)}
-                    </select>
-                  </div>
+                <div className="flex justify-between items-center mb-6 bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                  <button onClick={() => setTarifKlasoru(null)} className="flex items-center text-orange-800 hover:text-orange-600 font-bold">
+                    <ArrowLeft size={20} className="mr-2"/> Kategorilere Dön
+                  </button>
+                  <span className="font-bold text-slate-700 bg-slate-100 px-4 py-2 rounded-lg flex items-center"><Folder size={18} className="mr-2 text-orange-500"/> {tarifKlasoru} Klasörü</span>
+                </div>
+                
+                <div className="relative mb-6">
+                  <Search size={20} className="absolute left-4 top-3.5 text-slate-400" />
+                  <input type="text" placeholder={`"${tarifKlasoru}" içinde yemek ara...`} value={tarifArama} onChange={(e) => setTarifArama(e.target.value)} className="w-full pl-12 p-3 border border-orange-200 rounded-xl outline-none focus:ring-2 focus:ring-orange-500 shadow-sm text-base" />
                 </div>
 
                 <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-8">
-                  {tarifler.length === 0 ? <div className="text-center py-12 text-slate-500">Henüz hiç tarifiniz yok.</div> : (
+                  {tarifler.filter(t => t.kategori === tarifKlasoru).length === 0 ? <div className="text-center py-12 text-slate-500">Bu klasörde henüz yemek yok.</div> : (
                     <div className="divide-y divide-slate-100">
                       {tarifler
-                        .filter(t => (seciliKategori === 'Tümü' || t.kategori === seciliKategori) && t.ad.toLowerCase().includes(tarifArama.toLowerCase()))
+                        .filter(t => t.kategori === tarifKlasoru && t.ad.toLowerCase().includes(tarifArama.toLowerCase()))
                         .sort((a, b) => a.ad.localeCompare(b.ad))
                         .map(tarif => (
                         <div key={tarif.id} onClick={() => setDetayGosterilenTarif(tarif)} className="flex items-center p-3 hover:bg-orange-50 cursor-pointer transition-colors group">
@@ -358,7 +315,6 @@ export default function App() {
                           </div>
                           <div className="flex-1 min-w-0 pr-2">
                             <h3 className="text-base sm:text-lg font-bold text-slate-800 truncate">{tarif.ad}</h3>
-                            <p className="text-xs sm:text-sm text-slate-500">{tarif.kategori}</p>
                           </div>
                         </div>
                       ))}
@@ -366,27 +322,40 @@ export default function App() {
                   )}
                 </div>
               </>
+            ) : (
+              // KLASÖRLER (KATEGORİLER) LİSTESİ
+              <>
+                <h2 className="text-xl sm:text-2xl font-bold mb-6 text-orange-800 border-b-2 border-orange-200 pb-2 flex items-center"><Folder className="mr-2" size={24}/> Kategori Klasörleri</h2>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {yemekKategorileri.map(kategori => {
+                    const adet = tarifler.filter(t => t.kategori === kategori).length;
+                    return (
+                      <div key={kategori} onClick={() => {setTarifKlasoru(kategori); setTarifArama('');}} className="bg-white p-5 rounded-xl shadow-sm border border-slate-200 cursor-pointer hover:border-orange-400 hover:shadow-md transition-all flex flex-col items-center justify-center text-center group">
+                        <div className="w-14 h-14 bg-orange-100 rounded-full flex items-center justify-center mb-3 group-hover:bg-orange-500 transition-colors">
+                          <Folder size={28} className="text-orange-500 group-hover:text-white transition-colors" />
+                        </div>
+                        <h4 className="font-bold text-slate-800 text-sm sm:text-base">{kategori}</h4>
+                        <span className="text-xs text-slate-500 mt-1">{adet} Yemek</span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </>
             )}
           </div>
         )}
 
+        {/* MENÜLER PROPS GÜNCELLEMESİ */}
         {aktifSekme === 'menuler' && (
           <Menulerim 
             menuler={menuler} tarifler={tarifler} getGunlukTopluMalzemeler={getGunlukTopluMalzemeler} 
             setAktifSekme={setAktifSekme} setDetayGosterilenTarif={setDetayGosterilenTarif}
             detayMenu={detayMenu} setDetayMenu={setDetayMenu} setNeredenGeldi={setNeredenGeldi} 
-            tariheMenuEkle={tariheMenuEkle}
+            tariheMenuEkle={tariheMenuEkle} menuKategorileri={menuKategorileri}
           />
         )}
 
-        {aktifSekme === 'plan' && (
-          <HaftalikPlan 
-            haftalikPlan={haftalikPlan} 
-            tarifler={tarifler} 
-            planSil={planSil} 
-          />
-        )}
-
+        {aktifSekme === 'plan' && <HaftalikPlan haftalikPlan={haftalikPlan} tarifler={tarifler} planSil={planSil} />}
       </main>
 
       {modal.acik && (

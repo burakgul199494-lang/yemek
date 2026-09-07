@@ -10,11 +10,9 @@ export default function Menulerim({
   const [planTarihSecildi, setPlanTarihSecildi] = useState('');
   const [planModalAcik, setPlanModalAcik] = useState(false);
   
-  // KLASÖR VE ARAMA STATELERİ
   const [menuKlasoru, setMenuKlasoru] = useState(null);
   const [menuArama, setMenuArama] = useState('');
 
-  // 1. GÖRÜNÜM: MENÜ DETAYI VE PLANLAMA EKRANI
   if (detayMenu) {
     const menuTarifleri = detayMenu.tarifler.map(id => tarifler.find(t => t.id === id)).filter(Boolean);
     const alisverisListesi = getGunlukTopluMalzemeler(menuTarifleri);
@@ -32,7 +30,7 @@ export default function Menulerim({
       <div className="animate-in fade-in duration-300">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
           <button onClick={() => setDetayMenu(null)} className="flex items-center text-orange-800 hover:text-orange-600 font-bold">
-            <ArrowLeft size={20} className="mr-2"/> Klasöre Dön
+            <ArrowLeft size={20} className="mr-2"/> Kategoriye Dön
           </button>
           
           <button onClick={() => setPlanModalAcik(true)} className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-xl font-bold flex items-center shadow-sm text-sm">
@@ -119,7 +117,6 @@ export default function Menulerim({
     );
   }
 
-  // 2. GÖRÜNÜM: BİR KLASÖRÜN İÇİNDEKİ MENÜLER
   if (menuKlasoru) {
     const filtrelenmisMenuler = menuler.filter(m => m.kategori === menuKlasoru && m.ad.toLowerCase().includes(menuArama.toLowerCase()));
 
@@ -130,7 +127,7 @@ export default function Menulerim({
             <ArrowLeft size={20} className="mr-2"/> Kategorilere Dön
           </button>
           <span className="font-bold text-slate-700 bg-slate-100 px-4 py-2 rounded-lg flex items-center">
-            <Folder size={18} className="mr-2 text-orange-500"/> {menuKlasoru} Klasörü
+            <Folder size={18} className="mr-2 text-orange-500"/> {menuKlasoru} Kategorisi
           </span>
         </div>
         
@@ -141,7 +138,7 @@ export default function Menulerim({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtrelenmisMenuler.length === 0 ? (
-            <div className="col-span-full text-center py-12 bg-white rounded-xl border border-slate-200 text-slate-500">Bu klasörde henüz menü yok.</div>
+            <div className="col-span-full text-center py-12 bg-white rounded-xl border border-slate-200 text-slate-500">Bu kategoride henüz menü yok.</div>
           ) : (
             filtrelenmisMenuler.map(menu => (
               <div key={menu.id} onClick={() => setDetayMenu(menu)} className="bg-white p-5 rounded-xl shadow-sm border border-orange-100 cursor-pointer hover:shadow-md transition-shadow group relative">
@@ -165,22 +162,24 @@ export default function Menulerim({
     );
   }
 
-  // 3. GÖRÜNÜM: ANA KATEGORİ KLASÖRLERİ LİSTESİ
+  // LİSTE GÖRÜNÜMÜNE GEÇEN MENÜ KATEGORİLERİ
   return (
     <div className="animate-in fade-in duration-300">
       <h2 className="text-xl sm:text-2xl font-bold mb-6 text-orange-800 border-b-2 border-orange-200 pb-2 flex items-center">
-        <Folder className="mr-2" size={24}/> Menü Klasörleri
+        <Folder className="mr-2" size={24}/> Menü Kategorileri
       </h2>
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div className="flex flex-col space-y-3">
         {menuKategorileri.map(kategori => {
           const adet = menuler.filter(m => m.kategori === kategori).length;
           return (
-            <div key={kategori} onClick={() => {setMenuKlasoru(kategori); setMenuArama('');}} className="bg-white p-5 rounded-xl shadow-sm border border-slate-200 cursor-pointer hover:border-orange-400 hover:shadow-md transition-all flex flex-col items-center justify-center text-center group">
-              <div className="w-14 h-14 bg-orange-100 rounded-full flex items-center justify-center mb-3 group-hover:bg-orange-500 transition-colors">
-                <Folder size={28} className="text-orange-500 group-hover:text-white transition-colors" />
+            <div key={kategori} onClick={() => {setMenuKlasoru(kategori); setMenuArama('');}} className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 cursor-pointer hover:border-orange-400 hover:shadow-md transition-all flex items-center justify-between group">
+              <div className="flex items-center">
+                <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center mr-4 group-hover:bg-orange-500 transition-colors">
+                  <Folder size={24} className="text-orange-500 group-hover:text-white transition-colors" />
+                </div>
+                <h4 className="font-bold text-slate-800 text-base sm:text-lg">{kategori}</h4>
               </div>
-              <h4 className="font-bold text-slate-800 text-sm sm:text-base">{kategori}</h4>
-              <span className="text-xs text-slate-500 mt-1">{adet} Menü</span>
+              <span className="text-xs sm:text-sm font-bold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">{adet} Menü</span>
             </div>
           )
         })}

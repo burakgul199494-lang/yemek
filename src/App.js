@@ -71,7 +71,6 @@ export default function App() {
       setKullanici(currentUser);
       if (currentUser) {
         const _isAdmin = currentUser.email === ADMIN_EMAIL;
-        
         const ortakRef = doc(db, "sistem", "ortakVeri");
         const ortakSnap = await getDoc(ortakRef);
         let ortakData = ortakSnap.exists() ? ortakSnap.data() : null;
@@ -123,7 +122,7 @@ export default function App() {
     const formData = new FormData();
     formData.append('image', dosya);
     try {
-      const IMGBB_API_KEY = "329fb6a18d6667bf935aecfbd2c20d43"; // Kendi ImgBB anahtarını buraya yapıştırmayı unutma!
+      const IMGBB_API_KEY = "329fb6a18d6667bf935aecfbd2c20d43"; 
       const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: 'POST', body: formData });
       const data = await response.json();
       if (data.success) {
@@ -134,7 +133,7 @@ export default function App() {
         } else if (hedef === 'menu') {
           setYeniMenu({ ...yeniMenu, resim: url });
         }
-      } else alert("Fotoğraf yüklenemedi: ImgBB API anahtarınızı kontrol edin.");
+      } else alert("Fotoğraf yüklenemedi.");
     } catch(error) { alert("Bağlantı hatası oluştu."); }
     setResimYukleniyor(false);
   };
@@ -349,20 +348,20 @@ export default function App() {
         <div className="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
           <div className="flex items-center space-x-2 font-bold text-xl"><ChefHat size={28} /><span className="hidden sm:inline">Bizim Mutfak</span></div>
           <div className="hidden md:flex space-x-1">
-            {isAdmin && <button onClick={navClickEkle} className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm transition-colors ${aktifSekmeState === 'ekle' ? 'bg-orange-700' : 'hover:bg-orange-500'}`}><PlusCircle size={18} /> <span>Yönetim / Ekle</span></button>}
-            <button onClick={navClickTarifler} className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm transition-colors ${aktifSekmeState === 'tarifler' ? 'bg-orange-700' : 'hover:bg-orange-500'}`}><List size={18} /> <span>Tariflerim</span></button>
-            <button onClick={navClickMenuler} className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm transition-colors ${aktifSekmeState === 'menuler' ? 'bg-orange-700' : 'hover:bg-orange-500'}`}><Layers size={18} /> <span>Menülerim</span></button>
-            <button onClick={() => setAktifSekme('plan')} className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm transition-colors ${aktifSekmeState === 'plan' ? 'bg-orange-700' : 'hover:bg-orange-500'}`}><CalendarDays size={18} /> <span>Plan & Alışveriş</span></button>
+            {isAdmin && <button onClick={navClickEkle} className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm transition-colors ${aktifSekmeState === 'ekle' ? 'bg-orange-700' : 'md:hover:bg-orange-500'}`}><PlusCircle size={18} /> <span>Yönetim / Ekle</span></button>}
+            <button onClick={navClickTarifler} className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm transition-colors ${aktifSekmeState === 'tarifler' ? 'bg-orange-700' : 'md:hover:bg-orange-500'}`}><List size={18} /> <span>Tariflerim</span></button>
+            <button onClick={navClickMenuler} className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm transition-colors ${aktifSekmeState === 'menuler' ? 'bg-orange-700' : 'md:hover:bg-orange-500'}`}><Layers size={18} /> <span>Menülerim</span></button>
+            <button onClick={() => setAktifSekme('plan')} className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm transition-colors ${aktifSekmeState === 'plan' ? 'bg-orange-700' : 'md:hover:bg-orange-500'}`}><CalendarDays size={18} /> <span>Plan & Alışveriş</span></button>
           </div>
-          <button onClick={cikisYap} className="flex items-center space-x-1 bg-red-500 hover:bg-red-600 px-3 py-2 rounded-lg text-sm font-bold transition-colors shadow-sm"><LogOut size={18} /> <span className="hidden sm:inline">Çıkış</span></button>
+          <button onClick={cikisYap} className="flex items-center space-x-1 bg-red-500 md:hover:bg-red-600 px-3 py-2 rounded-lg text-sm font-bold transition-colors shadow-sm"><LogOut size={18} /> <span className="hidden sm:inline">Çıkış</span></button>
         </div>
       </nav>
 
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-[0_-10px_20px_rgba(0,0,0,0.04)] flex justify-between items-center px-2 py-2 z-50 print:hidden select-none touch-manipulation" style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}>
-        {isAdmin && <button onClick={navClickEkle} className={`flex-1 flex flex-col items-center p-2 rounded-xl text-[10px] sm:text-xs transition-all active:scale-95 ${aktifSekmeState === 'ekle' ? 'text-orange-600 font-extrabold bg-orange-50' : 'text-slate-500'}`}><PlusCircle size={24} className="mb-1" /> Yönetim</button>}
-        <button onClick={navClickTarifler} className={`flex-1 flex flex-col items-center p-2 rounded-xl text-[10px] sm:text-xs transition-all active:scale-95 ${aktifSekmeState === 'tarifler' ? 'text-orange-600 font-extrabold bg-orange-50' : 'text-slate-500'}`}><List size={24} className="mb-1" /> Tariflerim</button>
-        <button onClick={navClickMenuler} className={`flex-1 flex flex-col items-center p-2 rounded-xl text-[10px] sm:text-xs transition-all active:scale-95 ${aktifSekmeState === 'menuler' ? 'text-orange-600 font-extrabold bg-orange-50' : 'text-slate-500'}`}><Layers size={24} className="mb-1" /> Menüler</button>
-        <button onClick={() => setAktifSekme('plan')} className={`flex-1 flex flex-col items-center p-2 rounded-xl text-[10px] sm:text-xs transition-all active:scale-95 ${aktifSekmeState === 'plan' ? 'text-orange-600 font-extrabold bg-orange-50' : 'text-slate-500'}`}><CalendarDays size={24} className="mb-1" /> Plan</button>
+        {isAdmin && <button onClick={navClickEkle} className={`flex-1 flex flex-col items-center p-2 rounded-xl text-[10px] sm:text-xs transition-all ${aktifSekmeState === 'ekle' ? 'text-orange-600 font-extrabold bg-orange-50' : 'text-slate-500'}`}><PlusCircle size={24} className="mb-1" /> Yönetim</button>}
+        <button onClick={navClickTarifler} className={`flex-1 flex flex-col items-center p-2 rounded-xl text-[10px] sm:text-xs transition-all ${aktifSekmeState === 'tarifler' ? 'text-orange-600 font-extrabold bg-orange-50' : 'text-slate-500'}`}><List size={24} className="mb-1" /> Tariflerim</button>
+        <button onClick={navClickMenuler} className={`flex-1 flex flex-col items-center p-2 rounded-xl text-[10px] sm:text-xs transition-all ${aktifSekmeState === 'menuler' ? 'text-orange-600 font-extrabold bg-orange-50' : 'text-slate-500'}`}><Layers size={24} className="mb-1" /> Menüler</button>
+        <button onClick={() => setAktifSekme('plan')} className={`flex-1 flex flex-col items-center p-2 rounded-xl text-[10px] sm:text-xs transition-all ${aktifSekmeState === 'plan' ? 'text-orange-600 font-extrabold bg-orange-50' : 'text-slate-500'}`}><CalendarDays size={24} className="mb-1" /> Plan</button>
       </div>
 
       <main className="max-w-5xl mx-auto p-4 sm:p-6 print:p-0 print:max-w-none">
@@ -384,10 +383,10 @@ export default function App() {
             {detayGosterilenTarif ? (
               <div className="bg-white rounded-xl shadow-md overflow-hidden pb-4">
                 <div className="bg-orange-100 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                  <button onClick={() => { setDetayGosterilenTarif(null); if (neredenGeldi === 'menuler') { setAktifSekme('menuler'); setNeredenGeldi(null); } else if (neredenGeldi === 'plan') { setAktifSekme('plan'); setNeredenGeldi(null); } }} className="flex items-center text-orange-800 hover:text-orange-600 font-medium"><ArrowLeft size={20} className="mr-1"/> {neredenGeldi === 'menuler' ? 'Menüye Dön' : neredenGeldi === 'plan' ? 'Plana Dön' : (genelTarifArama ? 'Aramaya Dön' : 'Kategoriye Dön')}</button>
+                  <button onClick={() => { setDetayGosterilenTarif(null); if (neredenGeldi === 'menuler') { setAktifSekme('menuler'); setNeredenGeldi(null); } else if (neredenGeldi === 'plan') { setAktifSekme('plan'); setNeredenGeldi(null); } }} className="flex items-center text-orange-800 md:hover:text-orange-600 font-medium"><ArrowLeft size={20} className="mr-1"/> {neredenGeldi === 'menuler' ? 'Menüye Dön' : neredenGeldi === 'plan' ? 'Plana Dön' : (genelTarifArama ? 'Aramaya Dön' : 'Kategoriye Dön')}</button>
                   <div className="flex items-center gap-3">
                     <span className="bg-orange-200 text-orange-800 px-3 py-1 rounded-full text-sm font-semibold truncate">{detayGosterilenTarif.kategori}</span>
-                    <button onClick={() => setPlanModaliIcinTarif(detayGosterilenTarif)} className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-1.5 rounded-full font-bold flex items-center shadow-sm text-sm"><Calendar size={16} className="mr-2" /> Planla</button>
+                    <button onClick={() => setPlanModaliIcinTarif(detayGosterilenTarif)} className="bg-orange-600 md:hover:bg-orange-700 text-white px-4 py-1.5 rounded-full font-bold flex items-center shadow-sm text-sm"><Calendar size={16} className="mr-2" /> Planla</button>
                   </div>
                 </div>
                 {detayGosterilenTarif.resim && <div className="w-full h-48 sm:h-64 bg-slate-200"><img src={detayGosterilenTarif.resim} alt={detayGosterilenTarif.ad} className="w-full h-full object-cover" /></div>}
@@ -414,7 +413,7 @@ export default function App() {
                                   <span className="font-extrabold text-orange-600 bg-orange-100 w-6 h-6 flex items-center justify-center rounded-full shrink-0">{i+1}</span>
                                   <div className="flex-1">
                                     <p className="mt-0.5">{metin}</p>
-                                    {resim && <button onClick={() => setAcikResim(resim)} className="mt-2 flex items-center gap-1 text-[11px] bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-100 border border-blue-100 font-bold transition-colors shadow-sm w-fit"><ImageIcon size={14} /> Fotoğrafı Aç</button>}
+                                    {resim && <button onClick={() => setAcikResim(resim)} className="mt-2 flex items-center gap-1 text-[11px] bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg md:hover:bg-blue-100 border border-blue-100 font-bold transition-colors shadow-sm w-fit"><ImageIcon size={14} /> Fotoğrafı Aç</button>}
                                   </div>
                                 </li>
                               );
@@ -429,19 +428,19 @@ export default function App() {
             ) : tarifKlasoru ? (
               <>
                 <div className="flex justify-between items-center mb-6 bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                  <button onClick={() => setTarifKlasoru(null)} className="flex items-center text-orange-800 hover:text-orange-600 font-bold"><ArrowLeft size={20} className="mr-2"/> Kategorilere Dön</button>
+                  <button onClick={() => setTarifKlasoru(null)} className="flex items-center text-orange-800 md:hover:text-orange-600 font-bold"><ArrowLeft size={20} className="mr-2"/> Kategorilere Dön</button>
                   <span className="font-bold text-slate-700 bg-slate-100 px-4 py-2 rounded-lg flex items-center"><Folder size={18} className="mr-2 text-orange-500"/> {tarifKlasoru} Kategorisi</span>
                 </div>
                 <div className="relative mb-6">
                   <Search size={20} className="absolute left-4 top-3.5 text-slate-400" />
                   <input type="text" placeholder={`"${tarifKlasoru}" içinde yemek ara...`} value={tarifArama} onChange={(e) => setTarifArama(e.target.value)} className="w-full pl-12 pr-9 p-3 border border-orange-200 rounded-xl outline-none focus:ring-2 focus:ring-orange-500 shadow-sm text-base" />
-                  {tarifArama && <button onClick={() => setTarifArama('')} className="absolute right-4 top-3.5 text-slate-400 hover:text-red-500 transition-colors"><X size={20}/></button>}
+                  {tarifArama && <button onClick={() => setTarifArama('')} className="absolute right-4 top-3.5 text-slate-400 md:hover:text-red-500 transition-colors"><X size={20}/></button>}
                 </div>
                 <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-8">
                   {tarifler.filter(t => t.kategori === tarifKlasoru).length === 0 ? <div className="text-center py-12 text-slate-500">Bu kategoride henüz yemek yok.</div> : (
                     <div className="divide-y divide-slate-100">
                       {tarifler.filter(t => t.kategori === tarifKlasoru && t.ad.toLowerCase().includes(tarifArama.toLowerCase())).sort((a, b) => a.ad.localeCompare(b.ad)).map(tarif => (
-                        <div key={tarif.id} onClick={() => setDetayGosterilenTarif(tarif)} className="flex flex-col sm:flex-row justify-between sm:items-center p-3 hover:bg-orange-50 cursor-pointer transition-colors group border-b border-slate-50 last:border-0 gap-3">
+                        <div key={tarif.id} onClick={() => setDetayGosterilenTarif(tarif)} className="flex flex-col sm:flex-row justify-between sm:items-center p-3 md:hover:bg-orange-50 cursor-pointer transition-colors group border-b border-slate-50 last:border-0 gap-3">
                           <div className="flex items-center flex-1 min-w-0 pr-2">
                             <div className="w-16 h-16 flex-shrink-0 bg-orange-100 rounded-lg overflow-hidden mr-3">
                               {tarif.resim ? <img src={tarif.resim} alt={tarif.ad} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-orange-300"><ImageIcon size={20} /></div>}
@@ -455,7 +454,7 @@ export default function App() {
                             </div>
                           </div>
                           <div className="w-full sm:w-auto flex justify-end">
-                            <button onClick={(e) => { e.stopPropagation(); setPlanModaliIcinTarif(tarif); }} className="text-xs bg-orange-100 text-orange-700 hover:bg-orange-600 hover:text-white px-3 py-1.5 rounded-lg transition-colors font-bold flex items-center shadow-sm w-full justify-center sm:w-auto"><Calendar size={14} className="mr-1"/> Planla</button>
+                            <button onClick={(e) => { e.stopPropagation(); setPlanModaliIcinTarif(tarif); }} className="text-xs bg-orange-100 text-orange-700 md:hover:bg-orange-600 md:hover:text-white px-3 py-1.5 rounded-lg transition-colors font-bold flex items-center shadow-sm w-full justify-center sm:w-auto"><Calendar size={14} className="mr-1"/> Planla</button>
                           </div>
                         </div>
                       ))}
@@ -469,13 +468,13 @@ export default function App() {
                 <div className="relative mb-6">
                   <Search size={20} className="absolute left-4 top-3.5 text-slate-400" />
                   <input type="text" placeholder="Tüm tariflerde yemek ara..." value={genelTarifArama} onChange={(e) => setGenelTarifArama(e.target.value)} className="w-full pl-12 pr-9 p-3 border border-orange-200 rounded-xl outline-none focus:ring-2 focus:ring-orange-500 shadow-sm text-base bg-white" />
-                  {genelTarifArama && <button onClick={() => setGenelTarifArama('')} className="absolute right-4 top-3.5 text-slate-400 hover:text-red-500 transition-colors"><X size={20}/></button>}
+                  {genelTarifArama && <button onClick={() => setGenelTarifArama('')} className="absolute right-4 top-3.5 text-slate-400 md:hover:text-red-500 transition-colors"><X size={20}/></button>}
                 </div>
                 {genelTarifArama.trim() !== '' ? (
                   <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-8">
                     <div className="divide-y divide-slate-100">
                       {tarifler.filter(t => t.ad.toLowerCase().includes(genelTarifArama.toLowerCase())).sort((a, b) => a.ad.localeCompare(b.ad)).map(tarif => (
-                        <div key={tarif.id} onClick={() => setDetayGosterilenTarif(tarif)} className="flex flex-col sm:flex-row justify-between sm:items-center p-3 hover:bg-orange-50 cursor-pointer transition-colors group border-b border-slate-50 last:border-0 gap-3">
+                        <div key={tarif.id} onClick={() => setDetayGosterilenTarif(tarif)} className="flex flex-col sm:flex-row justify-between sm:items-center p-3 md:hover:bg-orange-50 cursor-pointer transition-colors group border-b border-slate-50 last:border-0 gap-3">
                           <div className="flex items-center flex-1 min-w-0 pr-2">
                             <div className="w-16 h-16 flex-shrink-0 bg-orange-100 rounded-lg overflow-hidden mr-3">
                               {tarif.resim ? <img src={tarif.resim} alt={tarif.ad} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-orange-300"><ImageIcon size={20} /></div>}
@@ -489,7 +488,7 @@ export default function App() {
                             </div>
                           </div>
                           <div className="w-full sm:w-auto flex justify-end">
-                            <button onClick={(e) => { e.stopPropagation(); setPlanModaliIcinTarif(tarif); }} className="text-xs bg-orange-100 text-orange-700 hover:bg-orange-600 hover:text-white px-3 py-1.5 rounded-lg transition-colors font-bold flex items-center shadow-sm w-full justify-center sm:w-auto"><Calendar size={14} className="mr-1"/> Planla</button>
+                            <button onClick={(e) => { e.stopPropagation(); setPlanModaliIcinTarif(tarif); }} className="text-xs bg-orange-100 text-orange-700 md:hover:bg-orange-600 md:hover:text-white px-3 py-1.5 rounded-lg transition-colors font-bold flex items-center shadow-sm w-full justify-center sm:w-auto"><Calendar size={14} className="mr-1"/> Planla</button>
                           </div>
                         </div>
                       ))}
@@ -502,9 +501,9 @@ export default function App() {
                       const adet = tarifler.filter(t => t.kategori === kategori).length;
                       if (kategori === 'Kategorisiz' && adet === 0) return null;
                       return (
-                        <div key={kategori} onClick={() => {setTarifKlasoru(kategori); setTarifArama('');}} className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 cursor-pointer hover:border-orange-400 hover:shadow-md transition-all flex items-center justify-between group">
+                        <div key={kategori} onClick={() => {setTarifKlasoru(kategori); setTarifArama('');}} className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 cursor-pointer md:hover:border-orange-400 md:hover:shadow-md transition-all flex items-center justify-between group">
                           <div className="flex items-center">
-                            <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center mr-4 group-hover:bg-orange-500 transition-colors"><Folder size={24} className="text-orange-500 group-hover:text-white transition-colors" /></div>
+                            <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center mr-4 md:group-hover:bg-orange-500 transition-colors"><Folder size={24} className="text-orange-500 md:group-hover:text-white transition-colors" /></div>
                             <h4 className="font-bold text-slate-800 text-base sm:text-lg">{kategori}</h4>
                           </div>
                           <span className="text-xs sm:text-sm font-bold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">{adet} Yemek</span>
@@ -525,7 +524,7 @@ export default function App() {
                     <input type="date" required value={tarifPlanTarihi} onChange={(e) => setTarifPlanTarihi(e.target.value)} className="w-full p-3 border rounded-xl bg-slate-50 outline-none focus:ring-2 focus:ring-orange-500 font-medium min-h-[50px] block appearance-none text-slate-800" />
                     <div className="flex justify-end gap-2">
                       <button type="button" onClick={() => { setPlanModaliIcinTarif(null); setTarifPlanModalAcik(false); }} className="px-4 py-2 bg-slate-100 rounded-xl font-bold text-slate-600 text-sm">İptal</button>
-                      <button type="submit" className="px-5 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-xl font-bold text-sm shadow-sm">Plana Ekle</button>
+                      <button type="submit" className="px-5 py-2 bg-orange-600 md:hover:bg-orange-700 text-white rounded-xl font-bold text-sm shadow-sm">Plana Ekle</button>
                     </div>
                   </form>
                 </div>
@@ -557,7 +556,7 @@ export default function App() {
 
       {acikResim && (
         <div className="fixed inset-0 bg-slate-900/90 z-[200] flex flex-col items-center justify-center p-4 backdrop-blur-sm print:hidden">
-          <button onClick={() => setAcikResim(null)} className="absolute top-6 right-6 text-slate-300 hover:text-white bg-slate-800 p-2 rounded-full transition-colors shadow-lg z-10"><X size={28}/></button>
+          <button onClick={() => setAcikResim(null)} className="absolute top-6 right-6 text-slate-300 md:hover:text-white bg-slate-800 p-2 rounded-full transition-colors shadow-lg z-10"><X size={28}/></button>
           <img src={acikResim} className="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl" alt="Hazırlık Adımı Detayı" />
         </div>
       )}
@@ -568,7 +567,7 @@ export default function App() {
             <h3 className={`text-xl font-bold mb-3 ${modal.tip === 'uyari' ? 'text-orange-600' : 'text-red-600'}`}>{modal.tip === 'uyari' ? 'Uyarı' : 'Emin misiniz?'}</h3>
             <p className="text-slate-600 mb-6">{modal.mesaj}</p>
             <div className="flex justify-end gap-3">
-              {modal.tip === 'onay' && <button onClick={() => setModal({ ...modal, acik: false })} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg font-bold">İptal</button>}
+              {modal.tip === 'onay' && <button onClick={() => setModal({ ...modal, acik: false })} className="px-4 py-2 bg-slate-100 md:hover:bg-slate-200 rounded-lg font-bold">İptal</button>}
               <button onClick={() => { if(modal.onOnay) modal.onOnay(); setModal({ ...modal, acik: false }); }} className={`px-5 py-2 text-white rounded-lg font-bold shadow-sm ${modal.tip === 'uyari' ? 'bg-orange-600' : 'bg-red-600'}`}>{modal.tip === 'uyari' ? 'Tamam' : 'Sil'}</button>
             </div>
           </div>

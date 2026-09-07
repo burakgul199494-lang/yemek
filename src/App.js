@@ -30,6 +30,10 @@ export default function App() {
 
   const [tarifKlasoru, setTarifKlasoru] = useState(null); 
   const [tarifArama, setTarifArama] = useState('');
+  
+  // YENİ: Kategoriye girmeden tüm tariflerde arama yapmak için state
+  const [genelTarifArama, setGenelTarifArama] = useState('');
+
   const [detayGosterilenTarif, setDetayGosterilenTarif] = useState(null);
   
   const [detayMenu, setDetayMenu] = useState(null);
@@ -213,8 +217,25 @@ export default function App() {
     setHaftalikPlan(prev => { const kopya = { ...prev }; delete kopya[tarihStr]; return kopya; });
   };
 
+  const getGunlukTopluMalzemeler = (gununTarifleri) => {
+    const liste = {};
+    gununTarifleri.forEach(tarif => {
+      if (!tarif) return;
+      tarif.malzemeler.forEach(m => {
+        if (!m.isim) return;
+        const key = `${m.isim.toLowerCase().trim()}_${m.birim}`;
+        if (!liste[key]) liste[key] = { isim: m.isim.charAt(0).toUpperCase() + m.isim.slice(1), birim: m.birim, miktar: 0 };
+        liste[key].miktar += Number(m.miktar) || 0;
+      });
+    });
+    return Object.values(liste).sort((a,b) => a.isim.localeCompare(b.isim));
+  };
+
   const navClickEkle = () => { setAktifSekme('ekle'); setYeniTarif({ ad: '', kategori: yemekKategorileri.find(k=>k!=='Kategorisiz')||'Kategorisiz', resim: '', malzemeler: [{ miktar: '', birim: 'gr', isim: '' }], hazirlanis: [''] }); setYeniMenu({ ad: '', kategori: menuKategorileri.find(k=>k!=='Kategorisiz')||'Kategorisiz', tarifler: [] }); setDetayGosterilenTarif(null); setNeredenGeldi(null); };
-  const navClickTarifler = () => { setAktifSekme('tarifler'); setTarifKlasoru(null); setDetayGosterilenTarif(null); setNeredenGeldi(null); setTarifArama(''); };
+  
+  // YENİ: Menü değişiminde genel aramayı da sıfırlıyoruz.
+  const navClickTarifler = () => { setAktifSekme('tarifler'); setTarifKlasoru(null); setDetayGosterilenTarif(null); setNeredenGeldi(null); setTarifArama(''); setGenelTarifArama(''); };
+  
   const navClickMenuler = () => { setAktifSekme('menuler'); setDetayMenu(null); setNeredenGeldi(null); };
 
   if (yukleniyor) return <div className="min-h-screen bg-orange-50 flex items-center justify-center text-orange-600 font-bold">Yükleniyor...</div>;
@@ -269,7 +290,7 @@ export default function App() {
               <div className="bg-white rounded-xl shadow-md overflow-hidden pb-4">
                 <div className="bg-orange-100 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                   <button onClick={() => { setDetayGosterilenTarif(null); if (neredenGeldi === 'menuler') { setAktifSekme('menuler'); setNeredenGeldi(null); } }} className="flex items-center text-orange-800 hover:text-orange-600 font-medium">
-                    <ArrowLeft size={20} className="mr-1"/> {neredenGeldi === 'menuler' ? 'Menüye Dön' : 'Kategoriye Dön'}
+                    <ArrowLeft size={20} className="mr-1"/> {neredenGeldi === 'menuler' ? 'Menüye Dön' : (genelTarifArama ? 'Aramaya Dön' : 'Kategoriye Dön')}
                   </button>
                   <span className="bg-orange-200 text-orange-800 px-3 py-1 rounded-full text-sm font-semibold truncate">{detayGosterilenTarif.kategori}</span>
                 </div>
@@ -333,24 +354,63 @@ export default function App() {
                 <h2 className="text-xl sm:text-2xl font-bold mb-6 text-orange-800 border-b-2 border-orange-200 pb-2 flex items-center">
                   <Folder className="mr-2" size={24}/> Yemek Kategorileri
                 </h2>
-                <div className="flex flex-col space-y-3">
-                  {yemekKategorileri.map(kategori => {
-                    const adet = tarifler.filter(t => t.kategori === kategori).length;
-                    // YENİ EKLENEN KISIM: İçi boşsa ve kategorisizse GİZLE
-                    if (kategori === 'Kategorisiz' && adet === 0) return null;
-                    return (
-                      <div key={kategori} onClick={() => {setTarifKlasoru(kategori); setTarifArama('');}} className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 cursor-pointer hover:border-orange-400 hover:shadow-md transition-all flex items-center justify-between group">
-                        <div className="flex items-center">
-                          <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center mr-4 group-hover:bg-orange-500 transition-colors">
-                            <Folder size={24} className="text-orange-500 group-hover:text-white transition-colors" />
-                          </div>
-                          <h4 className="font-bold text-slate-800 text-base sm:text-lg">{kategori}</h4>
-                        </div>
-                        <span className="text-xs sm:text-sm font-bold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">{adet} Yemek</span>
-                      </div>
-                    )
-                  })}
+                
+                {/* YENİ: GENEL TARİF ARAMA ÇUBUĞU */}
+                <div className="relative mb-6">
+                  <Search size={20} className="absolute left-4 top-3.5 text-slate-400" />
+                  <input 
+                    type="text" 
+                    placeholder="Tüm tariflerde yemek ara..." 
+                    value={genelTarifArama} 
+                    onChange={(e) => setGenelTarifArama(e.target.value)} 
+                    className="w-full pl-12 p-3 border border-orange-200 rounded-xl outline-none focus:ring-2 focus:ring-orange-500 shadow-sm text-base bg-white" 
+                  />
                 </div>
+
+                {genelTarifArama.trim() !== '' ? (
+                  // ARAMA YAPILIYORSA LİSTEYİ GÖSTER
+                  <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-8">
+                    <div className="divide-y divide-slate-100">
+                      {tarifler
+                        .filter(t => t.ad.toLowerCase().includes(genelTarifArama.toLowerCase()))
+                        .sort((a, b) => a.ad.localeCompare(b.ad))
+                        .map(tarif => (
+                        <div key={tarif.id} onClick={() => setDetayGosterilenTarif(tarif)} className="flex items-center p-3 hover:bg-orange-50 cursor-pointer transition-colors group">
+                          <div className="w-16 h-16 flex-shrink-0 bg-orange-100 rounded-lg overflow-hidden mr-3">
+                            {tarif.resim ? <img src={tarif.resim} alt={tarif.ad} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-orange-300"><ImageIcon size={20} /></div>}
+                          </div>
+                          <div className="flex-1 min-w-0 pr-2 flex flex-col items-start">
+                            <h3 className="text-base sm:text-lg font-bold text-slate-800 truncate">{tarif.ad}</h3>
+                            <span className="text-[10px] sm:text-xs text-orange-700 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded font-medium mt-1">{tarif.kategori}</span>
+                          </div>
+                        </div>
+                      ))}
+                      {tarifler.filter(t => t.ad.toLowerCase().includes(genelTarifArama.toLowerCase())).length === 0 && (
+                         <div className="text-center py-8 text-slate-500">Aramanızla eşleşen yemek bulunamadı.</div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  // ARAMA YOKSA KATEGORİ KLASÖRLERİNİ GÖSTER
+                  <div className="flex flex-col space-y-3">
+                    {yemekKategorileri.map(kategori => {
+                      const adet = tarifler.filter(t => t.kategori === kategori).length;
+                      if (kategori === 'Kategorisiz' && adet === 0) return null;
+                      
+                      return (
+                        <div key={kategori} onClick={() => {setTarifKlasoru(kategori); setTarifArama('');}} className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 cursor-pointer hover:border-orange-400 hover:shadow-md transition-all flex items-center justify-between group">
+                          <div className="flex items-center">
+                            <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center mr-4 group-hover:bg-orange-500 transition-colors">
+                              <Folder size={24} className="text-orange-500 group-hover:text-white transition-colors" />
+                            </div>
+                            <h4 className="font-bold text-slate-800 text-base sm:text-lg">{kategori}</h4>
+                          </div>
+                          <span className="text-xs sm:text-sm font-bold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">{adet} Yemek</span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
               </>
             )}
           </div>

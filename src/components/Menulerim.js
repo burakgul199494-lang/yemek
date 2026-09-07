@@ -12,6 +12,9 @@ export default function Menulerim({
   
   const [menuKlasoru, setMenuKlasoru] = useState(null);
   const [menuArama, setMenuArama] = useState('');
+  
+  // YENİ: Kategoriye girmeden tüm menülerde arama yapmak için state
+  const [genelMenuArama, setGenelMenuArama] = useState('');
 
   if (detayMenu) {
     const menuTarifleri = detayMenu.tarifler.map(id => tarifler.find(t => t.id === id)).filter(Boolean);
@@ -30,7 +33,7 @@ export default function Menulerim({
       <div className="animate-in fade-in duration-300">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
           <button onClick={() => setDetayMenu(null)} className="flex items-center text-orange-800 hover:text-orange-600 font-bold">
-            <ArrowLeft size={20} className="mr-2"/> Kategoriye Dön
+            <ArrowLeft size={20} className="mr-2"/> {genelMenuArama ? 'Aramaya Dön' : 'Geri Dön'}
           </button>
           
           <button onClick={() => setPlanModalAcik(true)} className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-xl font-bold flex items-center shadow-sm text-sm">
@@ -167,25 +170,66 @@ export default function Menulerim({
       <h2 className="text-xl sm:text-2xl font-bold mb-6 text-orange-800 border-b-2 border-orange-200 pb-2 flex items-center">
         <Folder className="mr-2" size={24}/> Menü Kategorileri
       </h2>
-      <div className="flex flex-col space-y-3">
-        {menuKategorileri.map(kategori => {
-          const adet = menuler.filter(m => m.kategori === kategori).length;
-          // YENİ: İçi boşsa ve kategorisizse GİZLE
-          if (kategori === 'Kategorisiz' && adet === 0) return null;
-          
-          return (
-            <div key={kategori} onClick={() => {setMenuKlasoru(kategori); setMenuArama('');}} className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 cursor-pointer hover:border-orange-400 hover:shadow-md transition-all flex items-center justify-between group">
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center mr-4 group-hover:bg-orange-500 transition-colors">
-                  <Folder size={24} className="text-orange-500 group-hover:text-white transition-colors" />
-                </div>
-                <h4 className="font-bold text-slate-800 text-base sm:text-lg">{kategori}</h4>
-              </div>
-              <span className="text-xs sm:text-sm font-bold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">{adet} Menü</span>
-            </div>
-          )
-        })}
+      
+      {/* YENİ: GENEL MENÜ ARAMA ÇUBUĞU */}
+      <div className="relative mb-6">
+        <Search size={20} className="absolute left-4 top-3.5 text-slate-400" />
+        <input 
+          type="text" 
+          placeholder="Tüm menülerde ara..." 
+          value={genelMenuArama} 
+          onChange={(e) => setGenelMenuArama(e.target.value)} 
+          className="w-full pl-12 p-3 border border-orange-200 rounded-xl outline-none focus:ring-2 focus:ring-orange-500 shadow-sm text-base bg-white" 
+        />
       </div>
+
+      {genelMenuArama.trim() !== '' ? (
+        // ARAMA YAPILIYORSA EŞLEŞEN MENÜLERİ GÖSTER
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {menuler.filter(m => m.ad.toLowerCase().includes(genelMenuArama.toLowerCase())).length === 0 ? (
+            <div className="col-span-full text-center py-8 text-slate-500 bg-white rounded-xl border border-slate-200">Aramanızla eşleşen menü bulunamadı.</div>
+          ) : (
+            menuler.filter(m => m.ad.toLowerCase().includes(genelMenuArama.toLowerCase())).map(menu => (
+              <div key={menu.id} onClick={() => setDetayMenu(menu)} className="bg-white p-5 rounded-xl shadow-sm border border-orange-100 cursor-pointer hover:shadow-md transition-shadow group relative">
+                <div className="flex justify-between items-start mb-3">
+                  <h4 className="text-lg font-bold text-slate-800">{menu.ad}</h4>
+                  <span className="text-[10px] sm:text-xs text-orange-700 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded font-medium">{menu.kategori}</span>
+                </div>
+                <div className="space-y-1">
+                  {menu.tarifler.map((tId, idx) => {
+                    const t = tarifler.find(x => x.id === tId);
+                    return t ? (
+                      <div key={idx} className="text-sm text-slate-600 flex items-center justify-between border-b border-slate-50 pb-1">
+                        <span className="flex items-center"><Check size={14} className="mr-1 text-green-500"/> {t.ad}</span>
+                      </div>
+                    ) : null;
+                  })}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      ) : (
+        // ARAMA YOKSA KATEGORİ KLASÖRLERİNİ GÖSTER
+        <div className="flex flex-col space-y-3">
+          {menuKategorileri.map(kategori => {
+            const adet = menuler.filter(m => m.kategori === kategori).length;
+            if (kategori === 'Kategorisiz' && adet === 0) return null;
+            
+            return (
+              <div key={kategori} onClick={() => {setMenuKlasoru(kategori); setMenuArama('');}} className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 cursor-pointer hover:border-orange-400 hover:shadow-md transition-all flex items-center justify-between group">
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center mr-4 group-hover:bg-orange-500 transition-colors">
+                    <Folder size={24} className="text-orange-500 group-hover:text-white transition-colors" />
+                  </div>
+                  <h4 className="font-bold text-slate-800 text-base sm:text-lg">{kategori}</h4>
+                </div>
+                <span className="text-xs sm:text-sm font-bold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">{adet} Menü</span>
+              </div>
+            )
+          })}
+        </div>
+      )}
     </div>
   );
 }

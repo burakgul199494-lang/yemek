@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, ShoppingCart, ChefHat, Calendar, Folder, Search, Layers } from 'lucide-react';
+import { ArrowLeft, ShoppingCart, ChefHat, Check, Calendar, Folder, Search, Layers } from 'lucide-react';
 
 export default function Menulerim({ 
   menuler, tarifler, getGunlukTopluMalzemeler, 
@@ -15,6 +15,7 @@ export default function Menulerim({
   
   const [genelMenuArama, setGenelMenuArama] = useState('');
 
+  // 1. GÖRÜNÜM: MENÜ DETAYI
   if (detayMenu) {
     const menuTarifleri = detayMenu.tarifler.map(id => tarifler.find(t => t.id === id)).filter(Boolean);
     const alisverisListesi = getGunlukTopluMalzemeler(menuTarifleri);
@@ -119,9 +120,20 @@ export default function Menulerim({
     );
   }
 
-  // BİR KLASÖRÜN İÇİNDEKİ MENÜLER (LİSTE TASARIMI)
+  // 2. GÖRÜNÜM: BİR KLASÖRÜN İÇİNDEKİ MENÜLER
   if (menuKlasoru) {
-    const filtrelenmisMenuler = menuler.filter(m => m.kategori === menuKlasoru && m.ad.toLowerCase().includes(menuArama.toLowerCase()));
+    const q = menuArama.toLowerCase();
+    
+    // YENİ: Hem menü isminde hem de içindeki yemeklerin isminde arama yapar
+    const filtrelenmisMenuler = menuler.filter(m => {
+      if (m.kategori !== menuKlasoru) return false;
+      const menuAdiUyuyor = m.ad.toLowerCase().includes(q);
+      const icindekiYemekUyuyor = m.tarifler.some(tId => {
+        const t = tarifler.find(x => x.id === tId);
+        return t && t.ad.toLowerCase().includes(q);
+      });
+      return menuAdiUyuyor || icindekiYemekUyuyor;
+    });
 
     return (
       <div className="animate-in fade-in duration-300">
@@ -136,12 +148,18 @@ export default function Menulerim({
         
         <div className="relative mb-6">
           <Search size={20} className="absolute left-4 top-3.5 text-slate-400" />
-          <input type="text" placeholder={`"${menuKlasoru}" içinde menü ara...`} value={menuArama} onChange={(e) => setMenuArama(e.target.value)} className="w-full pl-12 p-3 border border-orange-200 rounded-xl outline-none focus:ring-2 focus:ring-orange-500 shadow-sm text-base" />
+          <input 
+            type="text" 
+            placeholder={`"${menuKlasoru}" içinde menü veya yemek ara...`} 
+            value={menuArama} 
+            onChange={(e) => setMenuArama(e.target.value)} 
+            className="w-full pl-12 p-3 border border-orange-200 rounded-xl outline-none focus:ring-2 focus:ring-orange-500 shadow-sm text-base" 
+          />
         </div>
 
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-8">
           {filtrelenmisMenuler.length === 0 ? (
-            <div className="text-center py-12 text-slate-500">Bu kategoride henüz menü yok.</div>
+            <div className="text-center py-12 text-slate-500">Aramanızla eşleşen menü bulunamadı.</div>
           ) : (
             <div className="divide-y divide-slate-100">
               {filtrelenmisMenuler.map(menu => {
@@ -165,6 +183,17 @@ export default function Menulerim({
     );
   }
 
+  // YENİ: GENEL ARAMA İÇİN AYNI MANTIK (Tüm klasörlerdeki yemekleri ve menüleri tarar)
+  const gQ = genelMenuArama.toLowerCase();
+  const genelFiltrelenmisMenuler = menuler.filter(m => {
+    const menuAdiUyuyor = m.ad.toLowerCase().includes(gQ);
+    const icindekiYemekUyuyor = m.tarifler.some(tId => {
+      const t = tarifler.find(x => x.id === tId);
+      return t && t.ad.toLowerCase().includes(gQ);
+    });
+    return menuAdiUyuyor || icindekiYemekUyuyor;
+  });
+
   return (
     <div className="animate-in fade-in duration-300">
       <h2 className="text-xl sm:text-2xl font-bold mb-6 text-orange-800 border-b-2 border-orange-200 pb-2 flex items-center">
@@ -175,7 +204,7 @@ export default function Menulerim({
         <Search size={20} className="absolute left-4 top-3.5 text-slate-400" />
         <input 
           type="text" 
-          placeholder="Tüm menülerde ara..." 
+          placeholder="Tüm menülerde menü ismi veya yemek ara..." 
           value={genelMenuArama} 
           onChange={(e) => setGenelMenuArama(e.target.value)} 
           className="w-full pl-12 p-3 border border-orange-200 rounded-xl outline-none focus:ring-2 focus:ring-orange-500 shadow-sm text-base bg-white" 
@@ -183,13 +212,12 @@ export default function Menulerim({
       </div>
 
       {genelMenuArama.trim() !== '' ? (
-        // GENEL ARAMA YAPILDIĞINDA ÇIKAN LİSTE TASARIMI
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-8">
           <div className="divide-y divide-slate-100">
-            {menuler.filter(m => m.ad.toLowerCase().includes(genelMenuArama.toLowerCase())).length === 0 ? (
-              <div className="text-center py-12 text-slate-500">Aramanızla eşleşen menü bulunamadı.</div>
+            {genelFiltrelenmisMenuler.length === 0 ? (
+              <div className="text-center py-12 text-slate-500">Aramanızla eşleşen menü veya yemek bulunamadı.</div>
             ) : (
-              menuler.filter(m => m.ad.toLowerCase().includes(genelMenuArama.toLowerCase())).map(menu => {
+              genelFiltrelenmisMenuler.map(menu => {
                 const icerik = menu.tarifler.map(tId => tarifler.find(x => x.id === tId)?.ad).filter(Boolean).join(', ');
                 return (
                   <div key={menu.id} onClick={() => setDetayMenu(menu)} className="flex items-center p-3 hover:bg-orange-50 cursor-pointer transition-colors group">

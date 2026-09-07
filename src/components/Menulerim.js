@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, ShoppingCart, ChefHat, Check, Calendar, Folder, Search } from 'lucide-react';
+import { ArrowLeft, ShoppingCart, ChefHat, Calendar, Folder, Search, Layers } from 'lucide-react';
 
 export default function Menulerim({ 
   menuler, tarifler, getGunlukTopluMalzemeler, 
@@ -13,7 +13,6 @@ export default function Menulerim({
   const [menuKlasoru, setMenuKlasoru] = useState(null);
   const [menuArama, setMenuArama] = useState('');
   
-  // YENİ: Kategoriye girmeden tüm menülerde arama yapmak için state
   const [genelMenuArama, setGenelMenuArama] = useState('');
 
   if (detayMenu) {
@@ -120,6 +119,7 @@ export default function Menulerim({
     );
   }
 
+  // BİR KLASÖRÜN İÇİNDEKİ MENÜLER (LİSTE TASARIMI)
   if (menuKlasoru) {
     const filtrelenmisMenuler = menuler.filter(m => m.kategori === menuKlasoru && m.ad.toLowerCase().includes(menuArama.toLowerCase()));
 
@@ -139,26 +139,26 @@ export default function Menulerim({
           <input type="text" placeholder={`"${menuKlasoru}" içinde menü ara...`} value={menuArama} onChange={(e) => setMenuArama(e.target.value)} className="w-full pl-12 p-3 border border-orange-200 rounded-xl outline-none focus:ring-2 focus:ring-orange-500 shadow-sm text-base" />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-8">
           {filtrelenmisMenuler.length === 0 ? (
-            <div className="col-span-full text-center py-12 bg-white rounded-xl border border-slate-200 text-slate-500">Bu kategoride henüz menü yok.</div>
+            <div className="text-center py-12 text-slate-500">Bu kategoride henüz menü yok.</div>
           ) : (
-            filtrelenmisMenuler.map(menu => (
-              <div key={menu.id} onClick={() => setDetayMenu(menu)} className="bg-white p-5 rounded-xl shadow-sm border border-orange-100 cursor-pointer hover:shadow-md transition-shadow group relative">
-                <h4 className="text-lg font-bold text-slate-800 mb-3">{menu.ad}</h4>
-                <div className="space-y-1">
-                  {menu.tarifler.map((tId, idx) => {
-                    const t = tarifler.find(x => x.id === tId);
-                    return t ? (
-                      <div key={idx} className="text-sm text-slate-600 flex items-center justify-between border-b border-slate-50 pb-1">
-                        <span className="flex items-center"><Check size={14} className="mr-1 text-green-500"/> {t.ad}</span>
-                        <span className="text-[10px] text-orange-800 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded font-medium">({t.kategori})</span>
-                      </div>
-                    ) : null;
-                  })}
-                </div>
-              </div>
-            ))
+            <div className="divide-y divide-slate-100">
+              {filtrelenmisMenuler.map(menu => {
+                const icerik = menu.tarifler.map(tId => tarifler.find(x => x.id === tId)?.ad).filter(Boolean).join(', ');
+                return (
+                  <div key={menu.id} onClick={() => setDetayMenu(menu)} className="flex items-center p-3 hover:bg-orange-50 cursor-pointer transition-colors group">
+                    <div className="w-14 h-14 sm:w-16 sm:h-16 flex-shrink-0 bg-orange-100 rounded-lg flex items-center justify-center mr-3 sm:mr-4 group-hover:bg-orange-500 transition-colors">
+                      <Layers size={24} className="text-orange-500 group-hover:text-white transition-colors" />
+                    </div>
+                    <div className="flex-1 min-w-0 pr-2 flex flex-col items-start">
+                      <h3 className="text-base sm:text-lg font-bold text-slate-800 truncate">{menu.ad}</h3>
+                      <p className="text-xs sm:text-sm text-slate-500 truncate w-full mt-1">{icerik || "Menü boş"}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           )}
         </div>
       </div>
@@ -171,7 +171,6 @@ export default function Menulerim({
         <Folder className="mr-2" size={24}/> Menü Kategorileri
       </h2>
       
-      {/* YENİ: GENEL MENÜ ARAMA ÇUBUĞU */}
       <div className="relative mb-6">
         <Search size={20} className="absolute left-4 top-3.5 text-slate-400" />
         <input 
@@ -184,33 +183,33 @@ export default function Menulerim({
       </div>
 
       {genelMenuArama.trim() !== '' ? (
-        // ARAMA YAPILIYORSA EŞLEŞEN MENÜLERİ GÖSTER
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {menuler.filter(m => m.ad.toLowerCase().includes(genelMenuArama.toLowerCase())).length === 0 ? (
-            <div className="col-span-full text-center py-8 text-slate-500 bg-white rounded-xl border border-slate-200">Aramanızla eşleşen menü bulunamadı.</div>
-          ) : (
-            menuler.filter(m => m.ad.toLowerCase().includes(genelMenuArama.toLowerCase())).map(menu => (
-              <div key={menu.id} onClick={() => setDetayMenu(menu)} className="bg-white p-5 rounded-xl shadow-sm border border-orange-100 cursor-pointer hover:shadow-md transition-shadow group relative">
-                <div className="flex justify-between items-start mb-3">
-                  <h4 className="text-lg font-bold text-slate-800">{menu.ad}</h4>
-                  <span className="text-[10px] sm:text-xs text-orange-700 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded font-medium">{menu.kategori}</span>
-                </div>
-                <div className="space-y-1">
-                  {menu.tarifler.map((tId, idx) => {
-                    const t = tarifler.find(x => x.id === tId);
-                    return t ? (
-                      <div key={idx} className="text-sm text-slate-600 flex items-center justify-between border-b border-slate-50 pb-1">
-                        <span className="flex items-center"><Check size={14} className="mr-1 text-green-500"/> {t.ad}</span>
+        // GENEL ARAMA YAPILDIĞINDA ÇIKAN LİSTE TASARIMI
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-8">
+          <div className="divide-y divide-slate-100">
+            {menuler.filter(m => m.ad.toLowerCase().includes(genelMenuArama.toLowerCase())).length === 0 ? (
+              <div className="text-center py-12 text-slate-500">Aramanızla eşleşen menü bulunamadı.</div>
+            ) : (
+              menuler.filter(m => m.ad.toLowerCase().includes(genelMenuArama.toLowerCase())).map(menu => {
+                const icerik = menu.tarifler.map(tId => tarifler.find(x => x.id === tId)?.ad).filter(Boolean).join(', ');
+                return (
+                  <div key={menu.id} onClick={() => setDetayMenu(menu)} className="flex items-center p-3 hover:bg-orange-50 cursor-pointer transition-colors group">
+                    <div className="w-14 h-14 sm:w-16 sm:h-16 flex-shrink-0 bg-orange-100 rounded-lg flex items-center justify-center mr-3 sm:mr-4 group-hover:bg-orange-500 transition-colors">
+                      <Layers size={24} className="text-orange-500 group-hover:text-white transition-colors" />
+                    </div>
+                    <div className="flex-1 min-w-0 pr-2 flex flex-col items-start">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 w-full">
+                        <h3 className="text-base sm:text-lg font-bold text-slate-800 truncate">{menu.ad}</h3>
+                        <span className="text-[10px] sm:text-xs text-orange-700 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded font-medium w-max">{menu.kategori}</span>
                       </div>
-                    ) : null;
-                  })}
-                </div>
-              </div>
-            ))
-          )}
+                      <p className="text-xs sm:text-sm text-slate-500 truncate w-full mt-1">{icerik || "Menü boş"}</p>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
         </div>
       ) : (
-        // ARAMA YOKSA KATEGORİ KLASÖRLERİNİ GÖSTER
         <div className="flex flex-col space-y-3">
           {menuKategorileri.map(kategori => {
             const adet = menuler.filter(m => m.kategori === kategori).length;

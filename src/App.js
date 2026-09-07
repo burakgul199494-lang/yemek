@@ -46,7 +46,8 @@ export default function App() {
   const [detayMenu, setDetayMenu] = useState(null);
   const [neredenGeldi, setNeredenGeldi] = useState(null);
   
-  const [yeniMenu, setYeniMenu] = useState({ ad: '', kategori: 'Günlük', tarifler: [] });
+  // YENİ: Menü state'ine resim eklendi
+  const [yeniMenu, setYeniMenu] = useState({ ad: '', kategori: 'Günlük', tarifler: [], resim: '' });
   const [modal, setModal] = useState({ acik: false, tip: '', mesaj: '', onOnay: null });
   const [yeniTarif, setYeniTarif] = useState({ ad: '', kategori: 'Ana Yemek', resim: '', malzemeler: [{ miktar: '', birim: 'gr', isim: '' }], hazirlanis: [{metin: '', resim: ''}] });
 
@@ -87,8 +88,8 @@ export default function App() {
 
   const cikisYap = () => { signOut(auth); };
 
-  // YENİ: KARTSIZ & ÜCRETSİZ IMGBB FOTOĞRAF YÜKLEME MOTORU
-  const resimYukle = async (e, stepIndex = null) => {
+  // YENİ: Hedef eklendi ('tarif' veya 'menu')
+  const resimYukle = async (e, hedef = 'tarif', stepIndex = null) => {
     const dosya = e.target.files[0];
     if (!dosya) return;
     setResimYukleniyor(true);
@@ -97,7 +98,6 @@ export default function App() {
     formData.append('image', dosya);
 
     try {
-      // DİKKAT: ImgBB sitesinden aldığın şifreyi aşağıdaki tırnakların içine yapıştır:
       const IMGBB_API_KEY = "329fb6a18d6667bf935aecfbd2c20d43"; 
       
       const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
@@ -108,13 +108,18 @@ export default function App() {
       const data = await response.json();
 
       if (data.success) {
-        const url = data.data.url; // Buluta yüklenen resmin direkt linki
+        const url = data.data.url; 
 
-        if (stepIndex !== null) {
-          hazirlanisIslem.resimEkle(stepIndex, url);
-        } else {
-          setYeniTarif({ ...yeniTarif, resim: url });
+        if (hedef === 'tarif') {
+          if (stepIndex !== null) {
+            hazirlanisIslem.resimEkle(stepIndex, url);
+          } else {
+            setYeniTarif({ ...yeniTarif, resim: url });
+          }
+        } else if (hedef === 'menu') {
+          setYeniMenu({ ...yeniMenu, resim: url });
         }
+        
       } else {
         alert("Fotoğraf yüklenemedi: Lütfen ImgBB API anahtarınızı kontrol edin.");
       }
@@ -213,7 +218,8 @@ export default function App() {
       setMenuler([...menuler, { ...yeniMenu, id: Date.now().toString() }]);
     }
     const ilkKategori = menuKategorileri.find(k => k !== 'Kategorisiz') || 'Kategorisiz';
-    setYeniMenu({ ad: '', kategori: ilkKategori, tarifler: [] });
+    // YENİ: Menü resmini de sıfırlıyoruz
+    setYeniMenu({ ad: '', kategori: ilkKategori, tarifler: [], resim: '' });
   };
 
   const menuSil = (id) => { setModal({ acik: true, tip: 'onay', mesaj: 'Bu menüyü silmek istediğinize emin misiniz?', onOnay: () => setMenuler(prev => prev.filter(m => m.id !== id)) }); };
@@ -321,7 +327,7 @@ export default function App() {
     return Object.values(liste).sort((a,b) => a.isim.localeCompare(b.isim));
   };
 
-  const navClickEkle = () => { setAktifSekme('ekle'); setYeniTarif({ ad: '', kategori: yemekKategorileri.find(k=>k!=='Kategorisiz')||'Kategorisiz', resim: '', malzemeler: [{ miktar: '', birim: 'gr', isim: '' }], hazirlanis: [{metin:'', resim:''}] }); setYeniMenu({ ad: '', kategori: menuKategorileri.find(k=>k!=='Kategorisiz')||'Kategorisiz', tarifler: [] }); setDetayGosterilenTarif(null); setNeredenGeldi(null); };
+  const navClickEkle = () => { setAktifSekme('ekle'); setYeniTarif({ ad: '', kategori: yemekKategorileri.find(k=>k!=='Kategorisiz')||'Kategorisiz', resim: '', malzemeler: [{ miktar: '', birim: 'gr', isim: '' }], hazirlanis: [{metin:'', resim:''}] }); setYeniMenu({ ad: '', kategori: menuKategorileri.find(k=>k!=='Kategorisiz')||'Kategorisiz', tarifler: [], resim: '' }); setDetayGosterilenTarif(null); setNeredenGeldi(null); };
   const navClickTarifler = () => { setAktifSekme('tarifler'); setTarifKlasoru(null); setDetayGosterilenTarif(null); setNeredenGeldi(null); setTarifArama(''); setGenelTarifArama(''); };
   const navClickMenuler = () => { setAktifSekme('menuler'); setDetayMenu(null); setNeredenGeldi(null); };
 

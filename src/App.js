@@ -46,12 +46,11 @@ export default function App() {
   const [detayMenu, setDetayMenu] = useState(null);
   const [neredenGeldi, setNeredenGeldi] = useState(null);
   
-  // YENİ: Menü state'ine resim eklendi
   const [yeniMenu, setYeniMenu] = useState({ ad: '', kategori: 'Günlük', tarifler: [], resim: '' });
   const [modal, setModal] = useState({ acik: false, tip: '', mesaj: '', onOnay: null });
   const [yeniTarif, setYeniTarif] = useState({ ad: '', kategori: 'Ana Yemek', resim: '', malzemeler: [{ miktar: '', birim: 'gr', isim: '' }], hazirlanis: [{metin: '', resim: ''}] });
 
-  const [tarifPlanModalAcik, setTarifPlanModalAcik] = useState(false);
+  const [planModaliIcinTarif, setPlanModaliIcinTarif] = useState(null);
   const [tarifPlanTarihi, setTarifPlanTarihi] = useState('');
 
   const [resimYukleniyor, setResimYukleniyor] = useState(false);
@@ -88,7 +87,6 @@ export default function App() {
 
   const cikisYap = () => { signOut(auth); };
 
-  // YENİ: Hedef eklendi ('tarif' veya 'menu')
   const resimYukle = async (e, hedef = 'tarif', stepIndex = null) => {
     const dosya = e.target.files[0];
     if (!dosya) return;
@@ -99,33 +97,19 @@ export default function App() {
 
     try {
       const IMGBB_API_KEY = "329fb6a18d6667bf935aecfbd2c20d43"; 
-      
-      const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
-        method: 'POST',
-        body: formData
-      });
-      
+      const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: 'POST', body: formData });
       const data = await response.json();
 
       if (data.success) {
         const url = data.data.url; 
-
         if (hedef === 'tarif') {
-          if (stepIndex !== null) {
-            hazirlanisIslem.resimEkle(stepIndex, url);
-          } else {
-            setYeniTarif({ ...yeniTarif, resim: url });
-          }
+          if (stepIndex !== null) hazirlanisIslem.resimEkle(stepIndex, url);
+          else setYeniTarif({ ...yeniTarif, resim: url });
         } else if (hedef === 'menu') {
           setYeniMenu({ ...yeniMenu, resim: url });
         }
-        
-      } else {
-        alert("Fotoğraf yüklenemedi: Lütfen ImgBB API anahtarınızı kontrol edin.");
-      }
-    } catch(error) {
-      alert("Fotoğraf yüklenirken bir internet bağlantısı hatası oluştu.");
-    }
+      } else alert("Fotoğraf yüklenemedi: Lütfen ImgBB API anahtarınızı kontrol edin.");
+    } catch(error) { alert("Fotoğraf yüklenirken bağlantı hatası oluştu."); }
     setResimYukleniyor(false);
   };
 
@@ -218,7 +202,6 @@ export default function App() {
       setMenuler([...menuler, { ...yeniMenu, id: Date.now().toString() }]);
     }
     const ilkKategori = menuKategorileri.find(k => k !== 'Kategorisiz') || 'Kategorisiz';
-    // YENİ: Menü resmini de sıfırlıyoruz
     setYeniMenu({ ad: '', kategori: ilkKategori, tarifler: [], resim: '' });
   };
 
@@ -281,11 +264,11 @@ export default function App() {
 
   const tarifTakvimeIsle = (e) => {
     e.preventDefault();
-    if(!tarifPlanTarihi) return;
-    tariheEkle(tarifPlanTarihi, 'tarif', detayGosterilenTarif);
-    setTarifPlanModalAcik(false);
+    if(!tarifPlanTarihi || !planModaliIcinTarif) return;
+    tariheEkle(tarifPlanTarihi, 'tarif', planModaliIcinTarif);
+    setPlanModaliIcinTarif(null);
     setTarifPlanTarihi('');
-    alert(`"${detayGosterilenTarif.ad}" ${tarifPlanTarihi} tarihine başarıyla eklendi!`);
+    alert(`"${planModaliIcinTarif.ad}" ${tarifPlanTarihi} tarihine başarıyla eklendi!`);
   };
 
   const planTemizle = (tarihStr) => { setHaftalikPlan(prev => { const kopya = { ...prev }; delete kopya[tarihStr]; return kopya; }); };
@@ -378,7 +361,7 @@ export default function App() {
                   <button onClick={() => { setDetayGosterilenTarif(null); if (neredenGeldi === 'menuler') { setAktifSekme('menuler'); setNeredenGeldi(null); } else if (neredenGeldi === 'plan') { setAktifSekme('plan'); setNeredenGeldi(null); } }} className="flex items-center text-orange-800 hover:text-orange-600 font-medium"><ArrowLeft size={20} className="mr-1"/> {neredenGeldi === 'menuler' ? 'Menüye Dön' : neredenGeldi === 'plan' ? 'Plana Dön' : (genelTarifArama ? 'Aramaya Dön' : 'Kategoriye Dön')}</button>
                   <div className="flex items-center gap-3">
                     <span className="bg-orange-200 text-orange-800 px-3 py-1 rounded-full text-sm font-semibold truncate">{detayGosterilenTarif.kategori}</span>
-                    <button onClick={() => setTarifPlanModalAcik(true)} className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-1.5 rounded-full font-bold flex items-center shadow-sm text-sm"><Calendar size={16} className="mr-2" /> Planla</button>
+                    <button onClick={() => setPlanModaliIcinTarif(detayGosterilenTarif)} className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-1.5 rounded-full font-bold flex items-center shadow-sm text-sm"><Calendar size={16} className="mr-2" /> Planla</button>
                   </div>
                 </div>
                 {detayGosterilenTarif.resim && <div className="w-full h-48 sm:h-64 bg-slate-200"><img src={detayGosterilenTarif.resim} alt={detayGosterilenTarif.ad} className="w-full h-full object-cover" /></div>}
@@ -420,21 +403,6 @@ export default function App() {
                     </div>
                   </div>
                 </div>
-
-                {tarifPlanModalAcik && (
-                  <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[110] p-4 print:hidden">
-                    <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full">
-                      <h3 className="text-lg font-bold text-slate-800 mb-3">Bu Yemek Hangi Güne Eklensin?</h3>
-                      <form onSubmit={tarifTakvimeIsle} className="space-y-4">
-                        <input type="date" required value={tarifPlanTarihi} onChange={(e) => setTarifPlanTarihi(e.target.value)} className="w-full p-3 border rounded-xl bg-slate-50 outline-none focus:ring-2 focus:ring-orange-500 font-medium" />
-                        <div className="flex justify-end gap-2">
-                          <button type="button" onClick={() => setTarifPlanModalAcik(false)} className="px-4 py-2 bg-slate-100 rounded-xl font-bold text-slate-600 text-sm">İptal</button>
-                          <button type="submit" className="px-5 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-xl font-bold text-sm shadow-sm">Plana Ekle</button>
-                        </div>
-                      </form>
-                    </div>
-                  </div>
-                )}
               </div>
             ) : tarifKlasoru ? (
               <>
@@ -450,16 +418,22 @@ export default function App() {
                   {tarifler.filter(t => t.kategori === tarifKlasoru).length === 0 ? <div className="text-center py-12 text-slate-500">Bu kategoride henüz yemek yok.</div> : (
                     <div className="divide-y divide-slate-100">
                       {tarifler.filter(t => t.kategori === tarifKlasoru && t.ad.toLowerCase().includes(tarifArama.toLowerCase())).sort((a, b) => a.ad.localeCompare(b.ad)).map(tarif => (
-                        <div key={tarif.id} onClick={() => setDetayGosterilenTarif(tarif)} className="flex items-center p-3 hover:bg-orange-50 cursor-pointer transition-colors group">
-                          <div className="w-16 h-16 flex-shrink-0 bg-orange-100 rounded-lg overflow-hidden mr-3">
-                            {tarif.resim ? <img src={tarif.resim} alt={tarif.ad} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-orange-300"><ImageIcon size={20} /></div>}
-                          </div>
-                          <div className="flex-1 min-w-0 pr-2 flex flex-col items-start">
-                            <h3 className="text-base sm:text-lg font-bold text-slate-800 truncate">{tarif.ad}</h3>
-                            <div className="flex items-center gap-2 mt-1">
-                              <span className="text-[10px] sm:text-xs text-orange-700 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded font-medium">{tarif.kategori}</span>
-                              <span className="text-[10px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded flex items-center"><Calendar size={12} className="mr-1"/> Son: {sonTarihTarif(tarif.id) || 'Yok'}</span>
+                        <div key={tarif.id} onClick={() => setDetayGosterilenTarif(tarif)} className="flex flex-col sm:flex-row justify-between sm:items-center p-3 hover:bg-orange-50 cursor-pointer transition-colors group border-b border-slate-50 last:border-0 gap-3">
+                          <div className="flex items-center flex-1 min-w-0 pr-2">
+                            <div className="w-16 h-16 flex-shrink-0 bg-orange-100 rounded-lg overflow-hidden mr-3">
+                              {tarif.resim ? <img src={tarif.resim} alt={tarif.ad} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-orange-300"><ImageIcon size={20} /></div>}
                             </div>
+                            <div className="flex flex-col items-start truncate">
+                              <h3 className="text-base sm:text-lg font-bold text-slate-800 truncate">{tarif.ad}</h3>
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className="text-[10px] sm:text-xs text-orange-700 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded font-medium">{tarif.kategori}</span>
+                                <span className="text-[10px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded flex items-center"><Calendar size={12} className="mr-1"/> Son: {sonTarihTarif(tarif.id) || 'Yok'}</span>
+                              </div>
+                            </div>
+                          </div>
+                          {/* YENİ: Listede Hızlı Planla Butonu */}
+                          <div className="w-full sm:w-auto flex justify-end">
+                            <button onClick={(e) => { e.stopPropagation(); setPlanModaliIcinTarif(tarif); }} className="text-xs bg-orange-100 text-orange-700 hover:bg-orange-600 hover:text-white px-3 py-1.5 rounded-lg transition-colors font-bold flex items-center shadow-sm w-full justify-center sm:w-auto"><Calendar size={14} className="mr-1"/> Planla</button>
                           </div>
                         </div>
                       ))}
@@ -478,19 +452,26 @@ export default function App() {
                   <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-8">
                     <div className="divide-y divide-slate-100">
                       {tarifler.filter(t => t.ad.toLowerCase().includes(genelTarifArama.toLowerCase())).sort((a, b) => a.ad.localeCompare(b.ad)).map(tarif => (
-                        <div key={tarif.id} onClick={() => setDetayGosterilenTarif(tarif)} className="flex items-center p-3 hover:bg-orange-50 cursor-pointer transition-colors group">
-                          <div className="w-16 h-16 flex-shrink-0 bg-orange-100 rounded-lg overflow-hidden mr-3">
-                            {tarif.resim ? <img src={tarif.resim} alt={tarif.ad} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-orange-300"><ImageIcon size={20} /></div>}
-                          </div>
-                          <div className="flex-1 min-w-0 pr-2 flex flex-col items-start">
-                            <h3 className="text-base sm:text-lg font-bold text-slate-800 truncate">{tarif.ad}</h3>
-                            <div className="flex items-center gap-2 mt-1">
-                              <span className="text-[10px] sm:text-xs text-orange-700 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded font-medium">{tarif.kategori}</span>
-                              <span className="text-[10px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded flex items-center"><Calendar size={12} className="mr-1"/> Son: {sonTarihTarif(tarif.id) || 'Yok'}</span>
+                        <div key={tarif.id} onClick={() => setDetayGosterilenTarif(tarif)} className="flex flex-col sm:flex-row justify-between sm:items-center p-3 hover:bg-orange-50 cursor-pointer transition-colors group border-b border-slate-50 last:border-0 gap-3">
+                          <div className="flex items-center flex-1 min-w-0 pr-2">
+                            <div className="w-16 h-16 flex-shrink-0 bg-orange-100 rounded-lg overflow-hidden mr-3">
+                              {tarif.resim ? <img src={tarif.resim} alt={tarif.ad} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-orange-300"><ImageIcon size={20} /></div>}
                             </div>
+                            <div className="flex flex-col items-start truncate">
+                              <h3 className="text-base sm:text-lg font-bold text-slate-800 truncate">{tarif.ad}</h3>
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className="text-[10px] sm:text-xs text-orange-700 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded font-medium">{tarif.kategori}</span>
+                                <span className="text-[10px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded flex items-center"><Calendar size={12} className="mr-1"/> Son: {sonTarihTarif(tarif.id) || 'Yok'}</span>
+                              </div>
+                            </div>
+                          </div>
+                          {/* YENİ: Listede Hızlı Planla Butonu */}
+                          <div className="w-full sm:w-auto flex justify-end">
+                            <button onClick={(e) => { e.stopPropagation(); setPlanModaliIcinTarif(tarif); }} className="text-xs bg-orange-100 text-orange-700 hover:bg-orange-600 hover:text-white px-3 py-1.5 rounded-lg transition-colors font-bold flex items-center shadow-sm w-full justify-center sm:w-auto"><Calendar size={14} className="mr-1"/> Planla</button>
                           </div>
                         </div>
                       ))}
+                      {tarifler.filter(t => t.ad.toLowerCase().includes(genelTarifArama.toLowerCase())).length === 0 && <div className="text-center py-8 text-slate-500">Aramanızla eşleşen yemek bulunamadı.</div>}
                     </div>
                   </div>
                 ) : (
@@ -511,6 +492,22 @@ export default function App() {
                   </div>
                 )}
               </>
+            )}
+
+            {planModaliIcinTarif && (
+              <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[110] p-4 print:hidden">
+                <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full animate-in zoom-in-95 duration-200">
+                  <h3 className="text-lg font-bold text-slate-800 mb-3">Bu Yemek Hangi Güne Eklensin?</h3>
+                  <p className="text-xs text-slate-500 mb-4">Seçtiğin yemeği var olan bir menünün yanına ekstra olarak veya boş bir güne tek başına ekleyebilirsin.</p>
+                  <form onSubmit={tarifTakvimeIsle} className="space-y-4">
+                    <input type="date" required value={tarifPlanTarihi} onChange={(e) => setTarifPlanTarihi(e.target.value)} className="w-full p-3 border rounded-xl bg-slate-50 outline-none focus:ring-2 focus:ring-orange-500 font-medium" />
+                    <div className="flex justify-end gap-2">
+                      <button type="button" onClick={() => setPlanModaliIcinTarif(null)} className="px-4 py-2 bg-slate-100 rounded-xl font-bold text-slate-600 text-sm">İptal</button>
+                      <button type="submit" className="px-5 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-xl font-bold text-sm shadow-sm">Plana Ekle</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
             )}
           </div>
         )}

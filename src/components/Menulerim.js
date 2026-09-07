@@ -41,6 +41,13 @@ export default function Menulerim({
           
           <h2 className="text-2xl font-extrabold text-slate-800 mb-6 border-b-2 border-orange-200 pb-2">{detayMenu.ad}</h2>
           
+          {/* YENİ: MENÜ DETAY EKRANINDA KAPAK FOTOĞRAFI */}
+          {detayMenu.resim && (
+            <div className="w-full h-48 sm:h-64 bg-slate-200 mb-6 rounded-xl overflow-hidden shadow-sm print:hidden">
+              <img src={detayMenu.resim} alt={detayMenu.ad} className="w-full h-full object-cover" />
+            </div>
+          )}
+          
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-orange-50 p-5 rounded-xl border border-orange-200 shadow-sm h-fit">
               <h3 className="text-lg font-bold text-orange-800 mb-4 flex items-center border-b border-orange-200 pb-2"><ShoppingCart className="mr-2" size={20}/> Toplu İhtiyaç Listesi</h3>
@@ -187,7 +194,10 @@ export default function Menulerim({
                 const icerik = menu.tarifler.map(tId => tarifler.find(x => x.id === tId)?.ad).filter(Boolean).join(', ');
                 return (
                   <div key={menu.id} onClick={() => setDetayMenu(menu)} className="flex items-center p-3 hover:bg-orange-50 cursor-pointer transition-colors group">
-                    <div className="w-14 h-14 sm:w-16 sm:h-16 flex-shrink-0 bg-orange-100 rounded-lg flex items-center justify-center mr-3 sm:mr-4 group-hover:bg-orange-500 transition-colors"><Layers size={24} className="text-orange-500 group-hover:text-white transition-colors" /></div>
+                    {/* YENİ: Listede Menü Kapak Fotoğrafı */}
+                    <div className="w-14 h-14 sm:w-16 sm:h-16 flex-shrink-0 bg-orange-100 rounded-lg overflow-hidden flex items-center justify-center mr-3 sm:mr-4 group-hover:bg-orange-500 transition-colors">
+                      {menu.resim ? <img src={menu.resim} alt={menu.ad} className="w-full h-full object-cover" /> : <Layers size={24} className="text-orange-500 group-hover:text-white transition-colors" />}
+                    </div>
                     <div className="flex-1 min-w-0 pr-2 flex flex-col items-start">
                       <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 w-full">
                         <h3 className="text-base sm:text-lg font-bold text-slate-800 truncate">{menu.ad}</h3>
@@ -228,7 +238,10 @@ export default function Menulerim({
                 const icerik = menu.tarifler.map(tId => tarifler.find(x => x.id === tId)?.ad).filter(Boolean).join(', ');
                 return (
                   <div key={menu.id} onClick={() => setDetayMenu(menu)} className="flex items-center p-3 hover:bg-orange-50 cursor-pointer transition-colors group">
-                    <div className="w-14 h-14 sm:w-16 sm:h-16 flex-shrink-0 bg-orange-100 rounded-lg flex items-center justify-center mr-3 sm:mr-4 group-hover:bg-orange-500 transition-colors"><Layers size={24} className="text-orange-500 group-hover:text-white transition-colors" /></div>
+                    {/* YENİ: Listede Menü Kapak Fotoğrafı */}
+                    <div className="w-14 h-14 sm:w-16 sm:h-16 flex-shrink-0 bg-orange-100 rounded-lg overflow-hidden flex items-center justify-center mr-3 sm:mr-4 group-hover:bg-orange-500 transition-colors">
+                      {menu.resim ? <img src={menu.resim} alt={menu.ad} className="w-full h-full object-cover" /> : <Layers size={24} className="text-orange-500 group-hover:text-white transition-colors" />}
+                    </div>
                     <div className="flex-1 min-w-0 pr-2 flex flex-col items-start">
                       <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 w-full">
                         <h3 className="text-base sm:text-lg font-bold text-slate-800 truncate">{menu.ad}</h3>

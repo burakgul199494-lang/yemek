@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, ShoppingCart, ChefHat, Calendar } from 'lucide-react';
+import { ArrowLeft, ShoppingCart, ChefHat, Check, Calendar } from 'lucide-react';
 
 export default function Menulerim({ 
   menuler, tarifler, getGunlukTopluMalzemeler, 
@@ -56,26 +56,49 @@ export default function Menulerim({
             </ul>
           </div>
 
-          <div className="md:col-span-2 space-y-4">
+          <div className="md:col-span-2 space-y-6">
             {menuTarifleri.map(tarif => (
-              <div 
-                key={tarif.id} 
-                onClick={() => { 
-                  setDetayGosterilenTarif(tarif); 
-                  setNeredenGeldi('menuler'); 
-                  setAktifSekme('tarifler'); 
-                }}
-                className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm cursor-pointer hover:border-orange-400 hover:shadow-md transition-all flex justify-between items-center group"
-              >
-                <div>
-                  <h3 className="text-lg font-bold text-slate-800 group-hover:text-orange-600 transition-colors flex items-center">
-                    <ChefHat className="mr-2 text-orange-500" size={20}/> {tarif.ad}
-                  </h3>
-                  <span className="text-xs text-orange-700 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded-full font-medium inline-block mt-1">
-                    {tarif.kategori}
-                  </span>
+              <div key={tarif.id} className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                
+                {/* Yemek Başlığı ve Detaya Git Butonu */}
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h3 className="text-xl font-bold text-slate-800 flex items-center">
+                      <ChefHat className="mr-2 text-orange-500" size={22}/> {tarif.ad}
+                    </h3>
+                    <span className="text-xs text-orange-700 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded-full font-medium inline-block mt-2">
+                      {tarif.kategori}
+                    </span>
+                  </div>
+                  <button 
+                    onClick={() => { 
+                      setDetayGosterilenTarif(tarif); 
+                      setNeredenGeldi('menuler'); 
+                      setAktifSekme('tarifler'); 
+                    }}
+                    className="text-xs text-blue-600 font-bold bg-blue-50 hover:bg-blue-100 px-3 py-2 rounded-lg border border-blue-200 transition-colors shrink-0 ml-2 shadow-sm"
+                  >
+                    Tam Detayı Gör →
+                  </button>
                 </div>
-                <span className="text-xs text-blue-600 font-bold bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100">Tarifi Gör →</span>
+
+                {/* Yemek Yapılışı (Ana Ekranda Doğrudan Görünür) */}
+                <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                  <h4 className="font-bold text-slate-700 text-sm mb-3 border-b border-slate-200 pb-1">Hazırlanışı:</h4>
+                  {Array.isArray(tarif.hazirlanis) ? (
+                    <ul className="space-y-2 text-sm text-slate-600 leading-relaxed">
+                      {tarif.hazirlanis.map((adim, i) => adim.trim() && (
+                        <li key={i} className="flex gap-2">
+                          <span className="font-bold text-orange-600 shrink-0">{i+1}.</span>
+                          <span>{adim}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="whitespace-pre-wrap text-sm text-slate-600 leading-relaxed">{tarif.hazirlanis || "Hazırlanış bilgisi girilmemiş."}</p>
+                  )}
+                </div>
+
               </div>
             ))}
           </div>
@@ -122,7 +145,7 @@ export default function Menulerim({
                   const t = tarifler.find(x => x.id === tId);
                   return t ? (
                     <div key={idx} className="text-sm text-slate-600 flex items-center justify-between border-b border-slate-50 pb-1">
-                      <span>{t.ad}</span>
+                      <span className="flex items-center"><Check size={14} className="mr-1 text-green-500"/> {t.ad}</span>
                       <span className="text-[10px] text-orange-800 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded font-medium">({t.kategori})</span>
                     </div>
                   ) : null;

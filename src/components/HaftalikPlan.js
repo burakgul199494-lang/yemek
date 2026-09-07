@@ -57,7 +57,6 @@ export default function HaftalikPlan({ haftalikPlan, tarifler, planSil }) {
         });
       });
     });
-    // Alfabetik sıralama yapılıyor
     return Object.values(liste).sort((a,b) => a.isim.localeCompare(b.isim));
   };
 
@@ -65,13 +64,7 @@ export default function HaftalikPlan({ haftalikPlan, tarifler, planSil }) {
 
   return (
     <div>
-      {/* 
-        ====================================================
-        EKRAN GÖRÜNÜMÜ (YAZDIRIRKEN GİZLENECEK KISIM: print:hidden)
-        ====================================================
-      */}
       <div className="animate-in fade-in duration-300 mb-12 print:hidden">
-        {/* Üst Hafta Navigasyonu */}
         <div className="flex flex-col sm:flex-row justify-between items-center mb-6 bg-white p-4 rounded-xl shadow-sm border border-slate-200 gap-4">
           <h2 className="text-xl font-bold text-orange-800 flex items-center">
             <CalendarDays className="mr-2" size={24} /> Haftalık Menü Planı
@@ -90,11 +83,16 @@ export default function HaftalikPlan({ haftalikPlan, tarifler, planSil }) {
           </div>
         </div>
 
-        {/* Günlük Kartlar */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {haftaninGunleri.map(gun => {
             const planKaydi = haftalikPlan[gun.isoStr];
-            const planlananTarifler = planKaydi ? planKaydi.tarifler.map(id => tarifler.find(t => t.id === id)).filter(Boolean) : [];
+            const planlananTarifler = planKaydi ? (planKaydi.tarifler || []).map(id => tarifler.find(t => t.id === id)).filter(Boolean) : [];
+            
+            // Eski kayıtlara uyum sağlamak için köprü yapısı
+            let mAdlari = planKaydi?.menuAdlari || [];
+            if (planKaydi?.menuAdi && mAdlari.length === 0) {
+              mAdlari = [planKaydi.menuAdi];
+            }
 
             return (
               <div key={gun.isoStr} className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex flex-col justify-between">
@@ -106,14 +104,21 @@ export default function HaftalikPlan({ haftalikPlan, tarifler, planSil }) {
 
                   {planKaydi ? (
                     <div className="mb-3">
-                      <span className="inline-block bg-orange-100 text-orange-800 text-xs font-bold px-2 py-0.5 rounded mb-2">
-                        📦 {planKaydi.menuAdi}
-                      </span>
+                      {mAdlari.map((mAd, idx) => (
+                        <span key={idx} className="inline-block bg-orange-100 text-orange-800 text-[10px] font-bold px-2 py-0.5 rounded mb-2 mr-1">
+                          📦 {mAd}
+                        </span>
+                      ))}
+                      {mAdlari.length === 0 && planlananTarifler.length > 0 && (
+                        <span className="inline-block bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded mb-2">
+                          🍽️ Serbest Seçim
+                        </span>
+                      )}
                       <div className="space-y-2">
                         {planlananTarifler.map((t, idx) => (
-                          <div key={idx} className="bg-orange-50 p-2 rounded-lg border border-orange-100 text-xs">
-                            <span className="font-bold text-slate-800 block truncate">{t.ad}</span>
-                            <span className="text-[10px] text-slate-500 uppercase">({t.kategori})</span>
+                          <div key={idx} className="bg-orange-50 p-2 rounded-lg border border-orange-100 text-xs flex justify-between items-center">
+                            <span className="font-bold text-slate-800 block truncate pr-2">{t.ad}</span>
+                            <span className="text-[9px] text-slate-500 uppercase shrink-0">({t.kategori})</span>
                           </div>
                         ))}
                       </div>
@@ -136,7 +141,6 @@ export default function HaftalikPlan({ haftalikPlan, tarifler, planSil }) {
           })}
         </div>
 
-        {/* Haftalık Alışveriş Listesi Bölümü */}
         <div className="bg-orange-50 p-6 rounded-2xl border border-orange-200 shadow-sm">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b border-orange-200 pb-4 gap-4">
             <h3 className="text-xl font-bold text-orange-900 flex items-center">
@@ -144,10 +148,7 @@ export default function HaftalikPlan({ haftalikPlan, tarifler, planSil }) {
             </h3>
             
             {haftalikAlisveris.length > 0 && (
-              <button 
-                onClick={() => window.print()} 
-                className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold flex items-center shadow-md transition-colors w-full sm:w-auto justify-center"
-              >
+              <button onClick={() => window.print()} className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold flex items-center shadow-md transition-colors w-full sm:w-auto justify-center">
                 <Printer size={18} className="mr-2" /> PDF / Çıktı Al
               </button>
             )}
@@ -170,11 +171,6 @@ export default function HaftalikPlan({ haftalikPlan, tarifler, planSil }) {
         </div>
       </div>
 
-      {/* 
-        ====================================================
-        YAZDIRMA GÖRÜNÜMÜ (SADECE PDF/ÇIKTI ALINIRKEN GÖRÜNÜR)
-        ====================================================
-      */}
       <div className="hidden print:block print:w-full print:bg-white print:text-black print:p-4">
         <div className="text-center border-b-2 border-black pb-4 mb-6">
           <h1 className="text-3xl font-extrabold uppercase tracking-wider mb-2">Haftalık Alışveriş Listesi</h1>
@@ -184,16 +180,9 @@ export default function HaftalikPlan({ haftalikPlan, tarifler, planSil }) {
         <div className="grid grid-cols-2 gap-x-12 gap-y-3">
           {haftalikAlisveris.map((item, idx) => (
             <div key={idx} className="flex items-end border-b border-dashed border-gray-400 pb-2">
-              {/* Check-list Kutucuğu */}
               <div className="w-6 h-6 border-2 border-gray-600 rounded-sm mr-3 shrink-0"></div>
-              
-              {/* Malzeme Adı */}
               <span className="flex-1 font-semibold text-lg">{item.isim}</span>
-              
-              {/* Miktar */}
-              <span className="font-bold text-base bg-gray-100 px-2 py-1 rounded">
-                {item.miktar > 0 ? item.miktar : ''} {item.birim}
-              </span>
+              <span className="font-bold text-base bg-gray-100 px-2 py-1 rounded">{item.miktar > 0 ? item.miktar : ''} {item.birim}</span>
             </div>
           ))}
         </div>

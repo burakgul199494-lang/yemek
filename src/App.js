@@ -239,11 +239,35 @@ export default function App() {
     alert(`"${detayGosterilenTarif.ad}" ${tarifPlanTarihi} tarihine başarıyla eklendi!`);
   };
 
-  const planSil = (tarihStr) => {
+  // YENİ: Hem tüm günü, hem de günün içindeki spesifik bir menüyü/tarifi silmeye yarayan fonksiyonlar
+  const planTemizle = (tarihStr) => {
     setHaftalikPlan(prev => { const kopya = { ...prev }; delete kopya[tarihStr]; return kopya; });
   };
 
-  // YENİ: Y (yıl) harfi kaldırılarak hata çözüldü
+  const plandanOgeSil = (tarihStr, tip, obje) => {
+    setHaftalikPlan(prev => {
+      const kopya = { ...prev };
+      const gunPlani = { ...kopya[tarihStr] };
+      if (!gunPlani) return prev;
+
+      if (tip === 'menu') {
+        gunPlani.menuAdlari = (gunPlani.menuAdlari || []).filter(m => m !== obje.ad);
+        if (gunPlani.menuAdi === obje.ad) delete gunPlani.menuAdi;
+        const cikarilacakTarifler = obje.tarifler || [];
+        gunPlani.tarifler = (gunPlani.tarifler || []).filter(tId => !cikarilacakTarifler.includes(tId));
+      } else if (tip === 'tarif') {
+        gunPlani.tarifler = (gunPlani.tarifler || []).filter(tId => tId !== obje.id);
+      }
+
+      if ((!gunPlani.menuAdlari || gunPlani.menuAdlari.length === 0) && (!gunPlani.tarifler || gunPlani.tarifler.length === 0)) {
+        delete kopya[tarihStr];
+      } else {
+        kopya[tarihStr] = gunPlani;
+      }
+      return kopya;
+    });
+  };
+
   const formatTarih = (iso) => {
     if (!iso) return '';
     const parcalar = iso.split('-');
@@ -484,7 +508,13 @@ export default function App() {
           />
         )}
 
-        {aktifSekme === 'plan' && <HaftalikPlan haftalikPlan={haftalikPlan} tarifler={tarifler} planSil={planSil} />}
+        {/* YENİ PROP EKLENDİ: plandanOgeSil ve menuler */}
+        {aktifSekme === 'plan' && (
+          <HaftalikPlan 
+            haftalikPlan={haftalikPlan} tarifler={tarifler} menuler={menuler} 
+            planTemizle={planTemizle} plandanOgeSil={plandanOgeSil} 
+          />
+        )}
       </main>
 
       {modal.acik && (

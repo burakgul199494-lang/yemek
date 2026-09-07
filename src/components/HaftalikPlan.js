@@ -203,14 +203,15 @@ export default function HaftalikPlan({ haftalikPlan, tarifler, menuler, planTemi
   return (
     <div>
       <div className="animate-in fade-in duration-300 mb-12 print:hidden">
+        {/* YENİ: Mobilde taşmayı engelleyen ve tam ortalayan esnek flex tasarımı */}
         <div className="flex flex-col sm:flex-row justify-between items-center mb-6 bg-white p-4 rounded-xl shadow-sm border border-slate-200 gap-4">
           <h2 className="text-xl font-bold text-orange-800 flex items-center w-full justify-center sm:w-auto sm:justify-start">
             <CalendarDays className="mr-2" size={24} /> Haftalık Menü Planı
           </h2>
-          <div className="flex items-center justify-center gap-3 w-full sm:w-auto">
-            <button onClick={() => haftaDegistir(-1)} className="p-2 bg-orange-50 hover:bg-orange-100 text-orange-800 rounded-lg border border-orange-200 transition-colors"><ChevronLeft size={20} /></button>
-            <span className="font-bold text-xs sm:text-base text-slate-700 min-w-[160px] sm:min-w-[200px] text-center">{haftaAraligiMetni}</span>
-            <button onClick={() => haftaDegistir(1)} className="p-2 bg-orange-50 hover:bg-orange-100 text-orange-800 rounded-lg border border-orange-200 transition-colors"><ChevronRight size={20} /></button>
+          <div className="flex items-center justify-between w-full sm:w-auto gap-2 bg-slate-50 sm:bg-transparent p-1.5 sm:p-0 rounded-xl">
+            <button onClick={() => haftaDegistir(-1)} className="p-2 bg-white sm:bg-orange-50 hover:bg-orange-100 text-orange-800 rounded-lg border border-orange-200 transition-colors shrink-0 shadow-sm sm:shadow-none"><ChevronLeft size={20} /></button>
+            <span className="font-bold text-xs sm:text-base text-slate-700 text-center flex-1">{haftaAraligiMetni}</span>
+            <button onClick={() => haftaDegistir(1)} className="p-2 bg-white sm:bg-orange-50 hover:bg-orange-100 text-orange-800 rounded-lg border border-orange-200 transition-colors shrink-0 shadow-sm sm:shadow-none"><ChevronRight size={20} /></button>
           </div>
         </div>
 

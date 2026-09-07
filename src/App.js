@@ -25,11 +25,9 @@ export default function App() {
   const [menuler, setMenuler] = useState([]);
   const [haftalikPlan, setHaftalikPlan] = useState({});
   
-  // DİNAMİK KATEGORİLER
   const [yemekKategorileri, setYemekKategorileri] = useState(['Çorba', 'Ana Yemek', 'Zeytinyağlı', 'Ara Sıcak', 'Salata/Meze', 'Tatlı', 'Kahvaltılık', 'Kategorisiz']);
   const [menuKategorileri, setMenuKategorileri] = useState(['Günlük', 'Hafif Menü', 'Ağır Menü', 'Misafir', 'Hafta Sonu', 'Kategorisiz']);
 
-  // KLASÖR NAVİGASYON STATELERİ
   const [tarifKlasoru, setTarifKlasoru] = useState(null); 
   const [tarifArama, setTarifArama] = useState('');
   const [detayGosterilenTarif, setDetayGosterilenTarif] = useState(null);
@@ -161,12 +159,11 @@ export default function App() {
     });
   };
 
-const kategoriSil = (tip, silinecek) => {
+  const kategoriSil = (tip, silinecek) => {
     if (silinecek === 'Kategorisiz') return;
     setModal({
       acik: true, tip: 'onay', mesaj: `"${silinecek}" kategorisini silmek istediğinize emin misiniz? İçindeki ögeler 'Kategorisiz' olarak güncellenecek.`,
       onOnay: () => {
-        // BURADAKİ 'yemek' KELİMESİNİ 'tarif' OLARAK DÜZELTTİK
         if (tip === 'tarif') {
           setYemekKategorileri(prev => prev.filter(k => k !== silinecek));
           setTarifler(prev => prev.map(t => t.kategori === silinecek ? {...t, kategori: 'Kategorisiz'} : t));
@@ -181,9 +178,27 @@ const kategoriSil = (tip, silinecek) => {
   const kategoriEkle = (tip, yeniAd) => {
     const ad = yeniAd.trim();
     if (!ad) return;
-    // BURADAKİ 'yemek' KELİMESİNİ 'tarif' OLARAK DÜZELTTİK
     if (tip === 'tarif' && !yemekKategorileri.includes(ad)) setYemekKategorileri([...yemekKategorileri, ad]);
     if (tip === 'menu' && !menuKategorileri.includes(ad)) setMenuKategorileri([...menuKategorileri, ad]);
+  };
+
+  // YENİ: KATEGORİ SIRASINI (YUKARI/AŞAĞI) DEĞİŞTİRME FONKSİYONU
+  const kategoriTasi = (tip, index, yon) => {
+    if (tip === 'tarif') {
+      const yeniListe = [...yemekKategorileri];
+      if (index + yon < 0 || index + yon >= yeniListe.length) return;
+      const temp = yeniListe[index];
+      yeniListe[index] = yeniListe[index + yon];
+      yeniListe[index + yon] = temp;
+      setYemekKategorileri(yeniListe);
+    } else {
+      const yeniListe = [...menuKategorileri];
+      if (index + yon < 0 || index + yon >= yeniListe.length) return;
+      const temp = yeniListe[index];
+      yeniListe[index] = yeniListe[index + yon];
+      yeniListe[index + yon] = temp;
+      setMenuKategorileri(yeniListe);
+    }
   };
 
   const tariheMenuEkle = (tarihStr, menuObjesi) => {
@@ -253,18 +268,17 @@ const kategoriSil = (tip, silinecek) => {
             yemekKategorileri={yemekKategorileri} menuKategorileri={menuKategorileri} BIRIMLER={BIRIMLER} 
             malzemeIslem={malzemeIslem} hazirlanisIslem={hazirlanisIslem} resimYukle={resimYukle} 
             menuTarifToggle={menuTarifToggle} tarifSil={tarifSil} menuSil={menuSil} 
-            kategoriEkle={kategoriEkle} kategoriSil={kategoriSil}
+            kategoriEkle={kategoriEkle} kategoriSil={kategoriSil} kategoriTasi={kategoriTasi}
           />
         )}
 
-        {/* KLASÖRLÜ YENİ TARİFLERİM SEKME YAPISI */}
         {aktifSekme === 'tarifler' && (
           <div className="animate-in fade-in duration-300">
             {detayGosterilenTarif ? (
               <div className="bg-white rounded-xl shadow-md overflow-hidden pb-4">
                 <div className="bg-orange-100 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                   <button onClick={() => { setDetayGosterilenTarif(null); if (neredenGeldi === 'menuler') { setAktifSekme('menuler'); setNeredenGeldi(null); } }} className="flex items-center text-orange-800 hover:text-orange-600 font-medium">
-                    <ArrowLeft size={20} className="mr-1"/> {neredenGeldi === 'menuler' ? 'Menüye Dön' : 'Klasöre Dön'}
+                    <ArrowLeft size={20} className="mr-1"/> {neredenGeldi === 'menuler' ? 'Menüye Dön' : 'Kategoriye Dön'}
                   </button>
                   <span className="bg-orange-200 text-orange-800 px-3 py-1 rounded-full text-sm font-semibold truncate">{detayGosterilenTarif.kategori}</span>
                 </div>
@@ -290,13 +304,12 @@ const kategoriSil = (tip, silinecek) => {
                 </div>
               </div>
             ) : tarifKlasoru ? (
-              // BİR KLASÖRÜN İÇİNDEKİ YEMEKLER (ALFABETİK)
               <>
                 <div className="flex justify-between items-center mb-6 bg-white p-4 rounded-xl shadow-sm border border-slate-200">
                   <button onClick={() => setTarifKlasoru(null)} className="flex items-center text-orange-800 hover:text-orange-600 font-bold">
                     <ArrowLeft size={20} className="mr-2"/> Kategorilere Dön
                   </button>
-                  <span className="font-bold text-slate-700 bg-slate-100 px-4 py-2 rounded-lg flex items-center"><Folder size={18} className="mr-2 text-orange-500"/> {tarifKlasoru} Klasörü</span>
+                  <span className="font-bold text-slate-700 bg-slate-100 px-4 py-2 rounded-lg flex items-center"><Folder size={18} className="mr-2 text-orange-500"/> {tarifKlasoru} Kategorisi</span>
                 </div>
                 
                 <div className="relative mb-6">
@@ -305,7 +318,7 @@ const kategoriSil = (tip, silinecek) => {
                 </div>
 
                 <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-8">
-                  {tarifler.filter(t => t.kategori === tarifKlasoru).length === 0 ? <div className="text-center py-12 text-slate-500">Bu klasörde henüz yemek yok.</div> : (
+                  {tarifler.filter(t => t.kategori === tarifKlasoru).length === 0 ? <div className="text-center py-12 text-slate-500">Bu kategoride henüz yemek yok.</div> : (
                     <div className="divide-y divide-slate-100">
                       {tarifler
                         .filter(t => t.kategori === tarifKlasoru && t.ad.toLowerCase().includes(tarifArama.toLowerCase()))
@@ -325,19 +338,23 @@ const kategoriSil = (tip, silinecek) => {
                 </div>
               </>
             ) : (
-              // KLASÖRLER (KATEGORİLER) LİSTESİ
+              // LİSTE GÖRÜNÜMÜNE GEÇEN KATEGORİLER (Sıralama senin ayarladığın şekilde kalır)
               <>
-                <h2 className="text-xl sm:text-2xl font-bold mb-6 text-orange-800 border-b-2 border-orange-200 pb-2 flex items-center"><Folder className="mr-2" size={24}/> Kategori Klasörleri</h2>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                <h2 className="text-xl sm:text-2xl font-bold mb-6 text-orange-800 border-b-2 border-orange-200 pb-2 flex items-center">
+                  <Folder className="mr-2" size={24}/> Yemek Kategorileri
+                </h2>
+                <div className="flex flex-col space-y-3">
                   {yemekKategorileri.map(kategori => {
                     const adet = tarifler.filter(t => t.kategori === kategori).length;
                     return (
-                      <div key={kategori} onClick={() => {setTarifKlasoru(kategori); setTarifArama('');}} className="bg-white p-5 rounded-xl shadow-sm border border-slate-200 cursor-pointer hover:border-orange-400 hover:shadow-md transition-all flex flex-col items-center justify-center text-center group">
-                        <div className="w-14 h-14 bg-orange-100 rounded-full flex items-center justify-center mb-3 group-hover:bg-orange-500 transition-colors">
-                          <Folder size={28} className="text-orange-500 group-hover:text-white transition-colors" />
+                      <div key={kategori} onClick={() => {setTarifKlasoru(kategori); setTarifArama('');}} className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 cursor-pointer hover:border-orange-400 hover:shadow-md transition-all flex items-center justify-between group">
+                        <div className="flex items-center">
+                          <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center mr-4 group-hover:bg-orange-500 transition-colors">
+                            <Folder size={24} className="text-orange-500 group-hover:text-white transition-colors" />
+                          </div>
+                          <h4 className="font-bold text-slate-800 text-base sm:text-lg">{kategori}</h4>
                         </div>
-                        <h4 className="font-bold text-slate-800 text-sm sm:text-base">{kategori}</h4>
-                        <span className="text-xs text-slate-500 mt-1">{adet} Yemek</span>
+                        <span className="text-xs sm:text-sm font-bold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">{adet} Yemek</span>
                       </div>
                     )
                   })}
@@ -347,7 +364,6 @@ const kategoriSil = (tip, silinecek) => {
           </div>
         )}
 
-        {/* MENÜLER PROPS GÜNCELLEMESİ */}
         {aktifSekme === 'menuler' && (
           <Menulerim 
             menuler={menuler} tarifler={tarifler} getGunlukTopluMalzemeler={getGunlukTopluMalzemeler} 

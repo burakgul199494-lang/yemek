@@ -88,7 +88,6 @@ export default function HaftalikPlan({ haftalikPlan, tarifler, planSil }) {
             const planKaydi = haftalikPlan[gun.isoStr];
             const planlananTarifler = planKaydi ? (planKaydi.tarifler || []).map(id => tarifler.find(t => t.id === id)).filter(Boolean) : [];
             
-            // Eski kayıtlara uyum sağlamak için köprü yapısı
             let mAdlari = planKaydi?.menuAdlari || [];
             if (planKaydi?.menuAdi && mAdlari.length === 0) {
               mAdlari = [planKaydi.menuAdi];
@@ -171,18 +170,19 @@ export default function HaftalikPlan({ haftalikPlan, tarifler, planSil }) {
         </div>
       </div>
 
+      {/* YAZDIRMA BÖLÜMÜ - Tek Sütun (Her satıra bir ürün) */}
       <div className="hidden print:block print:w-full print:bg-white print:text-black print:p-4">
         <div className="text-center border-b-2 border-black pb-4 mb-6">
           <h1 className="text-3xl font-extrabold uppercase tracking-wider mb-2">Haftalık Alışveriş Listesi</h1>
           <p className="text-lg font-medium text-gray-700">Tarih Aralığı: {haftaAraligiMetni}</p>
         </div>
 
-        <div className="grid grid-cols-2 gap-x-12 gap-y-3">
+        <div className="flex flex-col space-y-4">
           {haftalikAlisveris.map((item, idx) => (
-            <div key={idx} className="flex items-end border-b border-dashed border-gray-400 pb-2">
-              <div className="w-6 h-6 border-2 border-gray-600 rounded-sm mr-3 shrink-0"></div>
+            <div key={idx} className="flex items-center border-b border-dashed border-gray-400 pb-2">
+              <div className="w-6 h-6 border-2 border-gray-600 rounded-sm mr-4 shrink-0"></div>
               <span className="flex-1 font-semibold text-lg">{item.isim}</span>
-              <span className="font-bold text-base bg-gray-100 px-2 py-1 rounded">{item.miktar > 0 ? item.miktar : ''} {item.birim}</span>
+              <span className="font-bold text-base bg-gray-100 px-3 py-1 rounded">{item.miktar > 0 ? item.miktar : ''} {item.birim}</span>
             </div>
           ))}
         </div>

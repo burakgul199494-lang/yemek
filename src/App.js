@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   ChefHat, PlusCircle, CalendarDays, 
-  Image as ImageIcon, List, Layers, ShoppingCart, ArrowLeft, Search, LogOut, Folder
+  Image as ImageIcon, List, Layers, ShoppingCart, ArrowLeft, Search, LogOut, Folder, Calendar
 } from 'lucide-react';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
@@ -30,10 +30,7 @@ export default function App() {
 
   const [tarifKlasoru, setTarifKlasoru] = useState(null); 
   const [tarifArama, setTarifArama] = useState('');
-  
-  // YENİ: Kategoriye girmeden tüm tariflerde arama yapmak için state
   const [genelTarifArama, setGenelTarifArama] = useState('');
-
   const [detayGosterilenTarif, setDetayGosterilenTarif] = useState(null);
   
   const [detayMenu, setDetayMenu] = useState(null);
@@ -42,6 +39,10 @@ export default function App() {
   const [yeniMenu, setYeniMenu] = useState({ ad: '', kategori: 'Günlük', tarifler: [] });
   const [modal, setModal] = useState({ acik: false, tip: '', mesaj: '', onOnay: null });
   const [yeniTarif, setYeniTarif] = useState({ ad: '', kategori: 'Ana Yemek', resim: '', malzemeler: [{ miktar: '', birim: 'gr', isim: '' }], hazirlanis: [''] });
+
+  // YENİ: Tarif Planlama State'leri
+  const [tarifPlanModalAcik, setTarifPlanModalAcik] = useState(false);
+  const [tarifPlanTarihi, setTarifPlanTarihi] = useState('');
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -194,10 +195,8 @@ export default function App() {
   const kategoriTasi = (tip, ad, yon) => {
     const islemListesi = tip === 'tarif' ? [...yemekKategorileri] : [...menuKategorileri];
     const stateHook = tip === 'tarif' ? setYemekKategorileri : setMenuKategorileri;
-    
     const index = islemListesi.indexOf(ad);
     if (index < 0 || index + yon < 0 || index + yon >= islemListesi.length || islemListesi[index + yon] === 'Kategorisiz') return;
-    
     const temp = islemListesi[index];
     islemListesi[index] = islemListesi[index + yon];
     islemListesi[index + yon] = temp;
@@ -209,12 +208,63 @@ export default function App() {
     else setMenuler(prev => prev.map(m => m.id === id ? { ...m, kategori: yeniKategori } : m));
   };
 
-  const tariheMenuEkle = (tarihStr, menuObjesi) => {
-    setHaftalikPlan(prev => ({ ...prev, [tarihStr]: { menuAdi: menuObjesi.ad, tarifler: menuObjesi.tarifler } }));
+  // YENİ: Hem menü hem tarif eklemeyi (üzerine yazmadan) destekleyen fonksiyon
+  const tariheEkle = (tarihStr, tip, obje) => {
+    setHaftalikPlan(prev => {
+      const gunPlani = prev[tarihStr] || { menuAdlari: [], tarifler: [] };
+      let yeniMenuAdlari = [...(gunPlani.menuAdlari || [])];
+      let yeniTarifler = [...(gunPlani.tarifler || [])];
+
+      // Eski sürümden kalan veri varsa köprü yap
+      if (gunPlani.menuAdi && yeniMenuAdlari.length === 0) {
+        yeniMenuAdlari.push(gunPlani.menuAdi);
+      }
+
+      if (tip === 'menu') {
+        if (!yeniMenuAdlari.includes(obje.ad)) yeniMenuAdlari.push(obje.ad);
+        obje.tarifler.forEach(tId => {
+          if (!yeniTarifler.includes(tId)) yeniTarifler.push(tId);
+        });
+      } else if (tip === 'tarif') {
+        if (!yeniTarifler.includes(obje.id)) yeniTarifler.push(obje.id);
+      }
+
+      return { ...prev, [tarihStr]: { menuAdlari: yeniMenuAdlari, tarifler: yeniTarifler } };
+    });
+  };
+
+  // YENİ: Tarif detayından tekil yemek planlama
+  const tarifTakvimeIsle = (e) => {
+    e.preventDefault();
+    if(!tarifPlanTarihi) return;
+    tariheEkle(tarifPlanTarihi, 'tarif', detayGosterilenTarif);
+    setTarifPlanModalAcik(false);
+    setTarifPlanTarihi('');
+    alert(`"${detayGosterilenTarif.ad}" ${tarifPlanTarihi} tarihine başarıyla eklendi!`);
   };
 
   const planSil = (tarihStr) => {
     setHaftalikPlan(prev => { const kopya = { ...prev }; delete kopya[tarihStr]; return kopya; });
+  };
+
+  // YENİ: Son yenme tarihini bulma formülleri (GG.AA formatında)
+  const formatTarih = (iso) => {
+    if (!iso) return '';
+    const [y, m, d] = iso.split('-');
+    return `${d}.${m}`;
+  };
+
+  const sonTarihTarif = (id) => {
+    const tarihler = Object.keys(haftalikPlan).filter(t => haftalikPlan[t].tarifler?.includes(id)).sort((a,b) => new Date(b) - new Date(a));
+    return tarihler.length > 0 ? formatTarih(tarihler[0]) : null;
+  };
+
+  const sonTarihMenu = (ad) => {
+    const tarihler = Object.keys(haftalikPlan).filter(t => {
+      const p = haftalikPlan[t];
+      return p.menuAdlari?.includes(ad) || p.menuAdi === ad; // Eski kayıt desteği
+    }).sort((a,b) => new Date(b) - new Date(a));
+    return tarihler.length > 0 ? formatTarih(tarihler[0]) : null;
   };
 
   const getGunlukTopluMalzemeler = (gununTarifleri) => {
@@ -232,10 +282,7 @@ export default function App() {
   };
 
   const navClickEkle = () => { setAktifSekme('ekle'); setYeniTarif({ ad: '', kategori: yemekKategorileri.find(k=>k!=='Kategorisiz')||'Kategorisiz', resim: '', malzemeler: [{ miktar: '', birim: 'gr', isim: '' }], hazirlanis: [''] }); setYeniMenu({ ad: '', kategori: menuKategorileri.find(k=>k!=='Kategorisiz')||'Kategorisiz', tarifler: [] }); setDetayGosterilenTarif(null); setNeredenGeldi(null); };
-  
-  // YENİ: Menü değişiminde genel aramayı da sıfırlıyoruz.
   const navClickTarifler = () => { setAktifSekme('tarifler'); setTarifKlasoru(null); setDetayGosterilenTarif(null); setNeredenGeldi(null); setTarifArama(''); setGenelTarifArama(''); };
-  
   const navClickMenuler = () => { setAktifSekme('menuler'); setDetayMenu(null); setNeredenGeldi(null); };
 
   if (yukleniyor) return <div className="min-h-screen bg-orange-50 flex items-center justify-center text-orange-600 font-bold">Yükleniyor...</div>;
@@ -249,14 +296,12 @@ export default function App() {
             <ChefHat size={28} />
             <span className="hidden sm:inline">Bizim Mutfak</span>
           </div>
-          
           <div className="hidden md:flex space-x-1">
             <button onClick={navClickEkle} className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm transition-colors ${aktifSekme === 'ekle' ? 'bg-orange-700' : 'hover:bg-orange-500'}`}><PlusCircle size={18} /> <span>Yönetim / Ekle</span></button>
             <button onClick={navClickTarifler} className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm transition-colors ${aktifSekme === 'tarifler' ? 'bg-orange-700' : 'hover:bg-orange-500'}`}><List size={18} /> <span>Tariflerim</span></button>
             <button onClick={navClickMenuler} className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm transition-colors ${aktifSekme === 'menuler' ? 'bg-orange-700' : 'hover:bg-orange-500'}`}><Layers size={18} /> <span>Menülerim</span></button>
             <button onClick={() => setAktifSekme('plan')} className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm transition-colors ${aktifSekme === 'plan' ? 'bg-orange-700' : 'hover:bg-orange-500'}`}><CalendarDays size={18} /> <span>Plan & Alışveriş</span></button>
           </div>
-
           <button onClick={cikisYap} className="flex items-center space-x-1 bg-red-500 hover:bg-red-600 px-3 py-2 rounded-lg text-sm font-bold transition-colors shadow-sm">
             <LogOut size={18} /> <span className="hidden sm:inline">Çıkış</span>
           </button>
@@ -292,7 +337,14 @@ export default function App() {
                   <button onClick={() => { setDetayGosterilenTarif(null); if (neredenGeldi === 'menuler') { setAktifSekme('menuler'); setNeredenGeldi(null); } }} className="flex items-center text-orange-800 hover:text-orange-600 font-medium">
                     <ArrowLeft size={20} className="mr-1"/> {neredenGeldi === 'menuler' ? 'Menüye Dön' : (genelTarifArama ? 'Aramaya Dön' : 'Kategoriye Dön')}
                   </button>
-                  <span className="bg-orange-200 text-orange-800 px-3 py-1 rounded-full text-sm font-semibold truncate">{detayGosterilenTarif.kategori}</span>
+                  
+                  <div className="flex items-center gap-3">
+                    <span className="bg-orange-200 text-orange-800 px-3 py-1 rounded-full text-sm font-semibold truncate">{detayGosterilenTarif.kategori}</span>
+                    {/* YENİ: Tarifin içindeki Planla Butonu */}
+                    <button onClick={() => setTarifPlanModalAcik(true)} className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-1.5 rounded-full font-bold flex items-center shadow-sm text-sm">
+                      <Calendar size={16} className="mr-2" /> Planla
+                    </button>
+                  </div>
                 </div>
                 {detayGosterilenTarif.resim && <div className="w-full h-48 sm:h-64 bg-slate-200"><img src={detayGosterilenTarif.resim} alt={detayGosterilenTarif.ad} className="w-full h-full object-cover" /></div>}
                 <div className="p-4 sm:p-8">
@@ -314,6 +366,26 @@ export default function App() {
                     </div>
                   </div>
                 </div>
+
+                {/* YENİ: Tarif Planlama Modalı */}
+                {tarifPlanModalAcik && (
+                  <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[110] p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full">
+                      <h3 className="text-lg font-bold text-slate-800 mb-3">Bu Yemek Hangi Güne Eklensin?</h3>
+                      <p className="text-xs text-slate-500 mb-4">Var olan bir menünün yanına eklenebilir veya tek başına planlanabilir.</p>
+                      <form onSubmit={tarifTakvimeIsle} className="space-y-4">
+                        <input 
+                          type="date" required value={tarifPlanTarihi} onChange={(e) => setTarifPlanTarihi(e.target.value)} 
+                          className="w-full p-3 border rounded-xl bg-slate-50 outline-none focus:ring-2 focus:ring-orange-500 font-medium"
+                        />
+                        <div className="flex justify-end gap-2">
+                          <button type="button" onClick={() => setTarifPlanModalAcik(false)} className="px-4 py-2 bg-slate-100 rounded-xl font-bold text-slate-600 text-sm">İptal</button>
+                          <button type="submit" className="px-5 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-xl font-bold text-sm shadow-sm">Plana Ekle</button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : tarifKlasoru ? (
               <>
@@ -323,12 +395,10 @@ export default function App() {
                   </button>
                   <span className="font-bold text-slate-700 bg-slate-100 px-4 py-2 rounded-lg flex items-center"><Folder size={18} className="mr-2 text-orange-500"/> {tarifKlasoru} Kategorisi</span>
                 </div>
-                
                 <div className="relative mb-6">
                   <Search size={20} className="absolute left-4 top-3.5 text-slate-400" />
                   <input type="text" placeholder={`"${tarifKlasoru}" içinde yemek ara...`} value={tarifArama} onChange={(e) => setTarifArama(e.target.value)} className="w-full pl-12 p-3 border border-orange-200 rounded-xl outline-none focus:ring-2 focus:ring-orange-500 shadow-sm text-base" />
                 </div>
-
                 <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-8">
                   {tarifler.filter(t => t.kategori === tarifKlasoru).length === 0 ? <div className="text-center py-12 text-slate-500">Bu kategoride henüz yemek yok.</div> : (
                     <div className="divide-y divide-slate-100">
@@ -340,8 +410,13 @@ export default function App() {
                           <div className="w-16 h-16 flex-shrink-0 bg-orange-100 rounded-lg overflow-hidden mr-3">
                             {tarif.resim ? <img src={tarif.resim} alt={tarif.ad} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-orange-300"><ImageIcon size={20} /></div>}
                           </div>
-                          <div className="flex-1 min-w-0 pr-2">
+                          <div className="flex-1 min-w-0 pr-2 flex flex-col items-start">
                             <h3 className="text-base sm:text-lg font-bold text-slate-800 truncate">{tarif.ad}</h3>
+                            {/* YENİ: Tarifin en son yendiği tarih */}
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-[10px] sm:text-xs text-orange-700 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded font-medium">{tarif.kategori}</span>
+                              <span className="text-[10px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded flex items-center"><Calendar size={12} className="mr-1"/> Son: {sonTarihTarif(tarif.id) || 'Yok'}</span>
+                            </div>
                           </div>
                         </div>
                       ))}
@@ -354,21 +429,11 @@ export default function App() {
                 <h2 className="text-xl sm:text-2xl font-bold mb-6 text-orange-800 border-b-2 border-orange-200 pb-2 flex items-center">
                   <Folder className="mr-2" size={24}/> Yemek Kategorileri
                 </h2>
-                
-                {/* YENİ: GENEL TARİF ARAMA ÇUBUĞU */}
                 <div className="relative mb-6">
                   <Search size={20} className="absolute left-4 top-3.5 text-slate-400" />
-                  <input 
-                    type="text" 
-                    placeholder="Tüm tariflerde yemek ara..." 
-                    value={genelTarifArama} 
-                    onChange={(e) => setGenelTarifArama(e.target.value)} 
-                    className="w-full pl-12 p-3 border border-orange-200 rounded-xl outline-none focus:ring-2 focus:ring-orange-500 shadow-sm text-base bg-white" 
-                  />
+                  <input type="text" placeholder="Tüm tariflerde yemek ara..." value={genelTarifArama} onChange={(e) => setGenelTarifArama(e.target.value)} className="w-full pl-12 p-3 border border-orange-200 rounded-xl outline-none focus:ring-2 focus:ring-orange-500 shadow-sm text-base bg-white" />
                 </div>
-
                 {genelTarifArama.trim() !== '' ? (
-                  // ARAMA YAPILIYORSA LİSTEYİ GÖSTER
                   <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-8">
                     <div className="divide-y divide-slate-100">
                       {tarifler
@@ -381,7 +446,10 @@ export default function App() {
                           </div>
                           <div className="flex-1 min-w-0 pr-2 flex flex-col items-start">
                             <h3 className="text-base sm:text-lg font-bold text-slate-800 truncate">{tarif.ad}</h3>
-                            <span className="text-[10px] sm:text-xs text-orange-700 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded font-medium mt-1">{tarif.kategori}</span>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-[10px] sm:text-xs text-orange-700 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded font-medium">{tarif.kategori}</span>
+                              <span className="text-[10px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded flex items-center"><Calendar size={12} className="mr-1"/> Son: {sonTarihTarif(tarif.id) || 'Yok'}</span>
+                            </div>
                           </div>
                         </div>
                       ))}
@@ -391,12 +459,10 @@ export default function App() {
                     </div>
                   </div>
                 ) : (
-                  // ARAMA YOKSA KATEGORİ KLASÖRLERİNİ GÖSTER
                   <div className="flex flex-col space-y-3">
                     {yemekKategorileri.map(kategori => {
                       const adet = tarifler.filter(t => t.kategori === kategori).length;
                       if (kategori === 'Kategorisiz' && adet === 0) return null;
-                      
                       return (
                         <div key={kategori} onClick={() => {setTarifKlasoru(kategori); setTarifArama('');}} className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 cursor-pointer hover:border-orange-400 hover:shadow-md transition-all flex items-center justify-between group">
                           <div className="flex items-center">
@@ -421,7 +487,7 @@ export default function App() {
             menuler={menuler} tarifler={tarifler} getGunlukTopluMalzemeler={getGunlukTopluMalzemeler} 
             setAktifSekme={setAktifSekme} setDetayGosterilenTarif={setDetayGosterilenTarif}
             detayMenu={detayMenu} setDetayMenu={setDetayMenu} setNeredenGeldi={setNeredenGeldi} 
-            tariheMenuEkle={tariheMenuEkle} menuKategorileri={menuKategorileri}
+            tariheEkle={tariheEkle} menuKategorileri={menuKategorileri} sonTarihMenu={sonTarihMenu}
           />
         )}
 

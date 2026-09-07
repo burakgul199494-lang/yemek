@@ -122,26 +122,35 @@ export default function Menulerim({
           )}
         </div>
 
-        {/* MENÜ DETAYI YAZDIRMA (PDF) ŞABLONU */}
+        {/* YENİ: MENÜ DETAYI YAZDIRMA (PDF) ŞABLONU */}
         <div className="hidden print:block print:w-full print:bg-white print:text-black print:p-4">
-          <div className="text-center border-b-4 border-black pb-4 mb-6">
+          
+          {/* İLK SAYFA: LİSTE */}
+          <div className="text-center border-b-2 border-black pb-4 mb-6">
             <h1 className="text-3xl font-extrabold uppercase tracking-wider mb-2">Menü Programı</h1>
-            <p className="text-xl font-bold text-gray-700">{detayMenu.ad}</p>
+            <p className="text-lg font-medium text-gray-700">Menü: {detayMenu.ad}</p>
           </div>
 
           <div className="mb-8">
             <h2 className="text-2xl font-bold border-b-2 border-gray-400 mb-4 pb-1">Toplu İhtiyaç Listesi</h2>
-            <div className="flex flex-wrap gap-x-8 gap-y-2">
-              {alisverisListesi.map((m, i) => (
-                <div key={i} className="text-base">
-                  <span className="font-bold border border-gray-300 px-1.5 py-0.5 rounded mr-1 bg-gray-100">{m.miktar} {m.birim}</span> {m.isim}
+            <div className="flex flex-col space-y-4">
+              {alisverisListesi.map((item, idx) => (
+                <div key={idx} className="flex items-center border-b border-dashed border-gray-400 pb-2">
+                  <div className="w-6 h-6 border-2 border-gray-600 rounded-sm mr-4 shrink-0"></div>
+                  <span className="flex-1 font-semibold text-lg">{item.isim}</span>
+                  <span className="font-bold text-base bg-gray-100 px-3 py-1 rounded">{item.miktar > 0 ? item.miktar : ''} {item.birim}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          <div>
-            <h2 className="text-2xl font-bold border-b-2 border-gray-400 mb-4 pb-1">Tarifler ve Yapılışları</h2>
+          {/* İKİNCİ SAYFA: TARİFLER VE YAPILIŞLARI */}
+          <div className="break-before-page">
+            <div className="text-center border-b-2 border-black pb-4 mb-6 pt-4">
+              <h1 className="text-3xl font-extrabold uppercase tracking-wider mb-2">Tarifler ve Yapılışları</h1>
+              <p className="text-lg font-medium text-gray-700">Menü: {detayMenu.ad}</p>
+            </div>
+            
             {menuTarifleri.map(t => (
               <div key={t.id} className="mb-8 break-inside-avoid border border-gray-300 p-4 rounded-lg">
                 <h3 className="text-xl font-bold mb-3 flex items-center bg-gray-100 p-2 rounded">{t.ad}</h3>
@@ -165,7 +174,7 @@ export default function Menulerim({
     );
   }
 
-  // --- KLASÖR VE LİSTELEME GÖRÜNÜMLERİ AŞAĞIDADIR (Aynı Bırakıldı) ---
+  // --- KLASÖR VE LİSTELEME GÖRÜNÜMLERİ AŞAĞIDADIR ---
   if (menuKlasoru) {
     const q = menuArama.toLowerCase();
     const filtrelenmisMenuler = menuler.filter(m => {

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, ShoppingCart, ChefHat, Check, Calendar, Folder, Search, Layers, Printer } from 'lucide-react';
+import { ArrowLeft, ShoppingCart, ChefHat, Calendar, Folder, Search, Layers, Printer } from 'lucide-react';
 
 export default function Menulerim({ 
   menuler, tarifler, getGunlukTopluMalzemeler, 

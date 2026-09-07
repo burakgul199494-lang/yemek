@@ -1,20 +1,20 @@
 import React, { useState } from 'react';
-import { Plus, X, Layers, ChefHat, Trash2, Edit, Search } from 'lucide-react';
+import { Plus, X, Layers, ChefHat, Trash2, Edit, Search, FolderPlus } from 'lucide-react';
 
 export default function YeniEkle({ 
   yeniTarif, setYeniTarif, yeniMenu, setYeniMenu, tarifler, menuler,
-  tarifKaydet, menuKaydet, KATEGORILER, BIRIMLER, malzemeIslem, hazirlanisIslem,
-  resimYukle, menuTarifToggle, tarifSil, menuSil 
+  tarifKaydet, menuKaydet, yemekKategorileri, menuKategorileri, BIRIMLER, 
+  malzemeIslem, hazirlanisIslem, resimYukle, menuTarifToggle, tarifSil, menuSil,
+  kategoriEkle, kategoriSil
 }) {
   const [islemTipi, setIslemTipi] = useState('tarif');
   
-  // Menü oluştururken yemekleri kolayca bulabilmek için arama/filtre stateleri
   const [menuArananYemek, setMenuArananYemek] = useState('');
   const [menuSeciliKategori, setMenuSeciliKategori] = useState('Tümü');
+  
+  const [yeniKatAd, setYeniKatAd] = useState('');
 
-  // Aşağıdaki listeden düzenle butonuna tıklandığında çalışacak fonksiyonlar
   const handleTarifDuzenle = (t) => {
-    // Eski kaydedilmiş string ise diziye çeviriyoruz ki formda satır satır gözüksün
     const hazirlanisDizisi = Array.isArray(t.hazirlanis) ? t.hazirlanis : (t.hazirlanis ? t.hazirlanis.split('\n') : ['']);
     setYeniTarif({ ...t, hazirlanis: hazirlanisDizisi });
     setIslemTipi('tarif');
@@ -27,27 +27,27 @@ export default function YeniEkle({
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleKatEkle = (e) => {
+    e.preventDefault();
+    kategoriEkle(islemTipi, yeniKatAd);
+    setYeniKatAd('');
+  };
+
   return (
     <div className="max-w-3xl mx-auto animate-in fade-in duration-300 mb-8">
       {/* Üst Geçiş Butonları */}
       <div className="flex bg-orange-100 p-1 rounded-xl mb-6">
-        <button 
-          onClick={() => setIslemTipi('tarif')}
-          className={`flex-1 py-3 rounded-lg font-bold flex items-center justify-center transition-all ${islemTipi === 'tarif' ? 'bg-white text-orange-600 shadow-sm' : 'text-orange-800/60 hover:text-orange-800'}`}
-        >
+        <button onClick={() => setIslemTipi('tarif')} className={`flex-1 py-3 rounded-lg font-bold flex items-center justify-center transition-all ${islemTipi === 'tarif' ? 'bg-white text-orange-600 shadow-sm' : 'text-orange-800/60 hover:text-orange-800'}`}>
           <ChefHat size={20} className="mr-2" /> Yemek Yönetimi
         </button>
-        <button 
-          onClick={() => setIslemTipi('menu')}
-          className={`flex-1 py-3 rounded-lg font-bold flex items-center justify-center transition-all ${islemTipi === 'menu' ? 'bg-white text-orange-600 shadow-sm' : 'text-orange-800/60 hover:text-orange-800'}`}
-        >
+        <button onClick={() => setIslemTipi('menu')} className={`flex-1 py-3 rounded-lg font-bold flex items-center justify-center transition-all ${islemTipi === 'menu' ? 'bg-white text-orange-600 shadow-sm' : 'text-orange-800/60 hover:text-orange-800'}`}>
           <Layers size={20} className="mr-2" /> Menü Yönetimi
         </button>
       </div>
 
+      {/* FORM ALANI */}
       <div className="bg-white p-4 sm:p-6 rounded-xl shadow-md border border-orange-100 mb-6">
         {islemTipi === 'tarif' ? (
-          
           <form onSubmit={tarifKaydet} className="space-y-5">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
@@ -55,20 +55,17 @@ export default function YeniEkle({
                   <input type="text" required value={yeniTarif.ad} onChange={(e) => setYeniTarif({...yeniTarif, ad: e.target.value})} className="w-full p-3 border rounded-lg bg-slate-50 focus:ring-2 focus:ring-orange-500 outline-none" placeholder="Örn: Mantı" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Kategori</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Klasör / Kategori</label>
                   <select value={yeniTarif.kategori} onChange={(e) => setYeniTarif({...yeniTarif, kategori: e.target.value})} className="w-full p-3 border rounded-lg bg-slate-50 outline-none">
-                    {KATEGORILER.map(k => <option key={k} value={k}>{k}</option>)}
+                    {yemekKategorileri.map(k => <option key={k} value={k}>{k}</option>)}
                   </select>
                 </div>
               </div>
 
-              {/* Malzemeler */}
               <div className="bg-orange-50 p-3 sm:p-4 rounded-xl border border-orange-100">
                 <div className="flex justify-between items-center mb-3 border-b border-orange-200 pb-2">
                   <h3 className="font-semibold text-slate-800">Malzemeler</h3>
-                  <button type="button" onClick={malzemeIslem.ekle} className="text-white bg-orange-500 px-3 py-1 rounded-lg flex items-center text-xs font-medium">
-                    <Plus size={14} className="mr-1" /> Ekle
-                  </button>
+                  <button type="button" onClick={malzemeIslem.ekle} className="text-white bg-orange-500 px-3 py-1 rounded-lg flex items-center text-xs font-medium"><Plus size={14} className="mr-1" /> Ekle</button>
                 </div>
                 <div className="space-y-3">
                   {yeniTarif.malzemeler.map((malzeme, index) => (
@@ -81,35 +78,24 @@ export default function YeniEkle({
                       </div>
                       <div className="flex gap-2 w-full sm:flex-1">
                         <input type="text" placeholder="Malzeme (Örn: Havuç)" required value={malzeme.isim} onChange={(e) => malzemeIslem.guncelle(index, 'isim', e.target.value)} className="flex-1 p-2.5 border rounded-lg text-sm bg-slate-50 outline-none" />
-                        {yeniTarif.malzemeler.length > 1 && (
-                          <button type="button" onClick={() => malzemeIslem.sil(index)} className="p-2.5 text-red-500 bg-red-50 rounded-lg sm:bg-transparent hover:text-red-700">
-                            <X size={18} />
-                          </button>
-                        )}
+                        {yeniTarif.malzemeler.length > 1 && <button type="button" onClick={() => malzemeIslem.sil(index)} className="p-2.5 text-red-500 bg-red-50 rounded-lg sm:bg-transparent hover:text-red-700"><X size={18} /></button>}
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
 
-              {/* Dinamik Hazırlanışı Bölümü */}
               <div className="bg-orange-50 p-3 sm:p-4 rounded-xl border border-orange-100">
                 <div className="flex justify-between items-center mb-3 border-b border-orange-200 pb-2">
                   <h3 className="font-semibold text-slate-800">Hazırlanışı (Adım Adım)</h3>
-                  <button type="button" onClick={hazirlanisIslem.ekle} className="text-white bg-orange-500 px-3 py-1 rounded-lg flex items-center text-xs font-medium">
-                    <Plus size={14} className="mr-1" /> Adım Ekle
-                  </button>
+                  <button type="button" onClick={hazirlanisIslem.ekle} className="text-white bg-orange-500 px-3 py-1 rounded-lg flex items-center text-xs font-medium"><Plus size={14} className="mr-1" /> Adım Ekle</button>
                 </div>
                 <div className="space-y-3">
                   {(Array.isArray(yeniTarif.hazirlanis) ? yeniTarif.hazirlanis : ['']).map((adim, index) => (
                     <div key={index} className="flex gap-2 items-start bg-white p-2 rounded-lg border border-orange-100 shadow-sm">
                       <span className="font-bold text-orange-600 mt-2 ml-1">{index + 1}.</span>
                       <textarea rows="2" placeholder="Örn: Soğanları ince ince doğrayın..." required value={adim} onChange={(e) => hazirlanisIslem.guncelle(index, e.target.value)} className="flex-1 p-2 border rounded-lg text-sm bg-slate-50 outline-none focus:ring-2 focus:ring-orange-300"></textarea>
-                      {(Array.isArray(yeniTarif.hazirlanis) ? yeniTarif.hazirlanis : []).length > 1 && (
-                        <button type="button" onClick={() => hazirlanisIslem.sil(index)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg mt-1">
-                          <X size={18} />
-                        </button>
-                      )}
+                      {(Array.isArray(yeniTarif.hazirlanis) ? yeniTarif.hazirlanis : []).length > 1 && <button type="button" onClick={() => hazirlanisIslem.sil(index)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg mt-1"><X size={18} /></button>}
                     </div>
                   ))}
                 </div>
@@ -119,19 +105,23 @@ export default function YeniEkle({
                 {yeniTarif.id ? 'Tarifi Güncelle' : 'Tarifi Kaydet'}
               </button>
           </form>
-
         ) : (
-          
           <form onSubmit={menuKaydet} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Menü Adı</label>
-              <input type="text" required value={yeniMenu.ad} onChange={e => setYeniMenu({...yeniMenu, ad: e.target.value})} className="w-full p-3 border rounded-lg bg-slate-50 outline-none focus:ring-2 focus:ring-orange-500" placeholder="Örn: Akşam Menüsü" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Menü Adı</label>
+                <input type="text" required value={yeniMenu.ad} onChange={e => setYeniMenu({...yeniMenu, ad: e.target.value})} className="w-full p-3 border rounded-lg bg-slate-50 outline-none focus:ring-2 focus:ring-orange-500" placeholder="Örn: Akşam Menüsü" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Menü Kategorisi</label>
+                <select value={yeniMenu.kategori} onChange={(e) => setYeniMenu({...yeniMenu, kategori: e.target.value})} className="w-full p-3 border rounded-lg bg-slate-50 outline-none">
+                  {menuKategorileri.map(k => <option key={k} value={k}>{k}</option>)}
+                </select>
+              </div>
             </div>
             
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">Yemek Seçimi</label>
-              
-              {/* Menü için yemek arama & filtre */}
               <div className="flex gap-2 mb-3 flex-col sm:flex-row">
                 <div className="relative flex-1">
                   <Search size={16} className="absolute left-3 top-3 text-slate-400" />
@@ -139,13 +129,13 @@ export default function YeniEkle({
                 </div>
                 <select value={menuSeciliKategori} onChange={(e) => setMenuSeciliKategori(e.target.value)} className="w-full sm:w-32 p-2.5 border rounded-lg bg-slate-50 text-sm outline-none">
                   <option value="Tümü">Tümü</option>
-                  {KATEGORILER.map(k => <option key={k} value={k}>{k}</option>)}
+                  {yemekKategorileri.map(k => <option key={k} value={k}>{k}</option>)}
                 </select>
               </div>
 
               <div className="max-h-72 overflow-y-auto border rounded-lg bg-white shadow-inner">
                 {(() => {
-                  const gosterilecekKategoriler = menuSeciliKategori === 'Tümü' ? KATEGORILER : [menuSeciliKategori];
+                  const gosterilecekKategoriler = menuSeciliKategori === 'Tümü' ? yemekKategorileri : [menuSeciliKategori];
                   return gosterilecekKategoriler.map(kategori => {
                     const kategoriTarifleri = tarifler.filter(t => t.kategori === kategori && t.ad.toLowerCase().includes(menuArananYemek.toLowerCase()));
                     if (kategoriTarifleri.length === 0) return null;
@@ -175,6 +165,39 @@ export default function YeniEkle({
         )}
       </div>
 
+      {/* DİNAMİK KATEGORİ YÖNETİMİ ALANI */}
+      <div className="bg-slate-800 p-4 sm:p-6 rounded-xl shadow-sm mb-6 text-white">
+        <h3 className="font-bold text-lg mb-4 border-b border-slate-700 pb-2 flex items-center">
+          <FolderPlus className="mr-2 text-orange-400" size={20}/> 
+          {islemTipi === 'tarif' ? 'Yemek Klasörlerini (Kategorilerini)' : 'Menü Klasörlerini'} Yönet
+        </h3>
+        
+        <form onSubmit={handleKatEkle} className="flex gap-2 mb-4">
+          <input 
+            type="text" 
+            placeholder="Yeni Kategori Adı" 
+            required
+            value={yeniKatAd}
+            onChange={e => setYeniKatAd(e.target.value)}
+            className="flex-1 p-2.5 rounded-lg bg-slate-700 border border-slate-600 text-sm outline-none focus:border-orange-400"
+          />
+          <button type="submit" className="bg-orange-500 hover:bg-orange-600 px-4 rounded-lg font-bold text-sm transition-colors">Ekle</button>
+        </form>
+
+        <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
+          {(islemTipi === 'tarif' ? yemekKategorileri : menuKategorileri).map(k => (
+            <div key={k} className="flex items-center bg-slate-700 px-3 py-1.5 rounded-lg text-sm border border-slate-600">
+              <span>{k}</span>
+              {k !== 'Kategorisiz' && (
+                <button onClick={() => kategoriSil(islemTipi, k)} className="ml-2 text-slate-400 hover:text-red-400 transition-colors">
+                  <X size={16}/>
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* SİLME VE YÖNETİM BÖLÜMÜ */}
       <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-slate-200">
         <h3 className="font-bold text-lg text-slate-800 mb-4 border-b pb-2">
@@ -185,12 +208,8 @@ export default function YeniEkle({
             <div key={t.id} className="flex justify-between items-center p-3 bg-slate-50 border rounded-lg hover:border-orange-200 transition-colors">
               <span className="font-medium text-slate-700">{t.ad}</span>
               <div className="flex gap-1">
-                <button onClick={() => handleTarifDuzenle(t)} className="text-blue-500 hover:bg-blue-100 p-2 rounded-lg transition-colors" title="Düzenle">
-                  <Edit size={18}/>
-                </button>
-                <button onClick={() => tarifSil(t.id)} className="text-red-500 hover:bg-red-100 p-2 rounded-lg transition-colors" title="Sil">
-                  <Trash2 size={18}/>
-                </button>
+                <button onClick={() => handleTarifDuzenle(t)} className="text-blue-500 hover:bg-blue-100 p-2 rounded-lg transition-colors"><Edit size={18}/></button>
+                <button onClick={() => tarifSil(t.id)} className="text-red-500 hover:bg-red-100 p-2 rounded-lg transition-colors"><Trash2 size={18}/></button>
               </div>
             </div>
           ))}
@@ -198,12 +217,8 @@ export default function YeniEkle({
             <div key={m.id} className="flex justify-between items-center p-3 bg-slate-50 border rounded-lg hover:border-orange-200 transition-colors">
               <span className="font-medium text-slate-700">{m.ad}</span>
               <div className="flex gap-1">
-                <button onClick={() => handleMenuDuzenle(m)} className="text-blue-500 hover:bg-blue-100 p-2 rounded-lg transition-colors" title="Düzenle">
-                  <Edit size={18}/>
-                </button>
-                <button onClick={() => menuSil(m.id)} className="text-red-500 hover:bg-red-100 p-2 rounded-lg transition-colors" title="Sil">
-                  <Trash2 size={18}/>
-                </button>
+                <button onClick={() => handleMenuDuzenle(m)} className="text-blue-500 hover:bg-blue-100 p-2 rounded-lg transition-colors"><Edit size={18}/></button>
+                <button onClick={() => menuSil(m.id)} className="text-red-500 hover:bg-red-100 p-2 rounded-lg transition-colors"><Trash2 size={18}/></button>
               </div>
             </div>
           ))}

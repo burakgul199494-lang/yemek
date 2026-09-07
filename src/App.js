@@ -239,7 +239,6 @@ export default function App() {
     alert(`"${detayGosterilenTarif.ad}" ${tarifPlanTarihi} tarihine başarıyla eklendi!`);
   };
 
-  // YENİ: Hem tüm günü, hem de günün içindeki spesifik bir menüyü/tarifi silmeye yarayan fonksiyonlar
   const planTemizle = (tarihStr) => {
     setHaftalikPlan(prev => { const kopya = { ...prev }; delete kopya[tarihStr]; return kopya; });
   };
@@ -268,10 +267,11 @@ export default function App() {
     });
   };
 
+  // YENİ: Tarih formatına yıl kısmı eklendi (GG.AA.YYYY)
   const formatTarih = (iso) => {
     if (!iso) return '';
     const parcalar = iso.split('-');
-    return `${parcalar[2]}.${parcalar[1]}`;
+    return `${parcalar[2]}.${parcalar[1]}.${parcalar[0]}`;
   };
 
   const sonTarihTarif = (id) => {
@@ -508,8 +508,7 @@ export default function App() {
           />
         )}
 
-        {/* YENİ PROP EKLENDİ: plandanOgeSil ve menuler */}
-          {aktifSekme === 'plan' && (
+        {aktifSekme === 'plan' && (
           <HaftalikPlan 
             haftalikPlan={haftalikPlan} tarifler={tarifler} menuler={menuler} 
             planTemizle={planTemizle} plandanOgeSil={plandanOgeSil} 

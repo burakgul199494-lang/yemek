@@ -19,7 +19,27 @@ export default function App() {
   const [yukleniyor, setYukleniyor] = useState(true);
   const [veriYuklendi, setVeriYuklendi] = useState(false); 
 
-  const [aktifSekme, setAktifSekme] = useState('ekle'); 
+  // 1. YENİ: HASH ROUTING (LİNK) MANTIĞI
+  const getBaslangicSekmesi = () => {
+    const hash = window.location.hash.replace('#', '');
+    return ['ekle', 'tarifler', 'menuler', 'plan'].includes(hash) ? hash : 'ekle';
+  };
+
+  const [aktifSekmeState, setAktifSekmeState] = useState(getBaslangicSekmesi);
+
+  const setAktifSekme = (sekme) => {
+    window.location.hash = sekme; // URL'yi günceller (Örn: /#tarifler)
+    setAktifSekmeState(sekme);
+  };
+
+  // URL manuel değişirse veya sayfa yenilenirse sekmeyi algıla
+  useEffect(() => {
+    const handleHashChange = () => {
+      setAktifSekmeState(getBaslangicSekmesi());
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
 
   const [tarifler, setTarifler] = useState([]);
   const [menuler, setMenuler] = useState([]);
@@ -267,7 +287,6 @@ export default function App() {
     });
   };
 
-  // YENİ: Tarih formatına yıl kısmı eklendi (GG.AA.YYYY)
   const formatTarih = (iso) => {
     if (!iso) return '';
     const parcalar = iso.split('-');
@@ -301,6 +320,7 @@ export default function App() {
     return Object.values(liste).sort((a,b) => a.isim.localeCompare(b.isim));
   };
 
+  // 2. YENİ: SEKME DEĞİŞİMLERİNDE HASH ROUTER KULLANIMI
   const navClickEkle = () => { setAktifSekme('ekle'); setYeniTarif({ ad: '', kategori: yemekKategorileri.find(k=>k!=='Kategorisiz')||'Kategorisiz', resim: '', malzemeler: [{ miktar: '', birim: 'gr', isim: '' }], hazirlanis: [''] }); setYeniMenu({ ad: '', kategori: menuKategorileri.find(k=>k!=='Kategorisiz')||'Kategorisiz', tarifler: [] }); setDetayGosterilenTarif(null); setNeredenGeldi(null); };
   const navClickTarifler = () => { setAktifSekme('tarifler'); setTarifKlasoru(null); setDetayGosterilenTarif(null); setNeredenGeldi(null); setTarifArama(''); setGenelTarifArama(''); };
   const navClickMenuler = () => { setAktifSekme('menuler'); setDetayMenu(null); setNeredenGeldi(null); };
@@ -309,7 +329,8 @@ export default function App() {
   if (!kullanici) return <Login />;
 
   return (
-    <div className="min-h-screen bg-orange-50 text-slate-800 font-sans pb-20 md:pb-6 print:pb-0 print:bg-white">
+    // 3. YENİ: MOBİL İÇİN ALT BOŞLUK (pb-28) ARTIRILDI
+    <div className="min-h-screen bg-orange-50 text-slate-800 font-sans pb-28 md:pb-6 print:pb-0 print:bg-white">
       <nav className="bg-orange-600 text-white shadow-md print:hidden sticky top-0 z-10">
         <div className="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
           <div className="flex items-center space-x-2 font-bold text-xl">
@@ -317,10 +338,10 @@ export default function App() {
             <span className="hidden sm:inline">Bizim Mutfak</span>
           </div>
           <div className="hidden md:flex space-x-1">
-            <button onClick={navClickEkle} className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm transition-colors ${aktifSekme === 'ekle' ? 'bg-orange-700' : 'hover:bg-orange-500'}`}><PlusCircle size={18} /> <span>Yönetim / Ekle</span></button>
-            <button onClick={navClickTarifler} className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm transition-colors ${aktifSekme === 'tarifler' ? 'bg-orange-700' : 'hover:bg-orange-500'}`}><List size={18} /> <span>Tariflerim</span></button>
-            <button onClick={navClickMenuler} className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm transition-colors ${aktifSekme === 'menuler' ? 'bg-orange-700' : 'hover:bg-orange-500'}`}><Layers size={18} /> <span>Menülerim</span></button>
-            <button onClick={() => setAktifSekme('plan')} className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm transition-colors ${aktifSekme === 'plan' ? 'bg-orange-700' : 'hover:bg-orange-500'}`}><CalendarDays size={18} /> <span>Plan & Alışveriş</span></button>
+            <button onClick={navClickEkle} className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm transition-colors ${aktifSekmeState === 'ekle' ? 'bg-orange-700' : 'hover:bg-orange-500'}`}><PlusCircle size={18} /> <span>Yönetim / Ekle</span></button>
+            <button onClick={navClickTarifler} className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm transition-colors ${aktifSekmeState === 'tarifler' ? 'bg-orange-700' : 'hover:bg-orange-500'}`}><List size={18} /> <span>Tariflerim</span></button>
+            <button onClick={navClickMenuler} className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm transition-colors ${aktifSekmeState === 'menuler' ? 'bg-orange-700' : 'hover:bg-orange-500'}`}><Layers size={18} /> <span>Menülerim</span></button>
+            <button onClick={() => setAktifSekme('plan')} className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm transition-colors ${aktifSekmeState === 'plan' ? 'bg-orange-700' : 'hover:bg-orange-500'}`}><CalendarDays size={18} /> <span>Plan & Alışveriş</span></button>
           </div>
           <button onClick={cikisYap} className="flex items-center space-x-1 bg-red-500 hover:bg-red-600 px-3 py-2 rounded-lg text-sm font-bold transition-colors shadow-sm">
             <LogOut size={18} /> <span className="hidden sm:inline">Çıkış</span>
@@ -328,16 +349,28 @@ export default function App() {
         </div>
       </nav>
 
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-[0_-5px_10px_rgba(0,0,0,0.05)] flex justify-between items-center px-1 py-2 z-50 pb-safe print:hidden">
-        <button onClick={navClickEkle} className={`flex-1 flex flex-col items-center p-2 rounded-lg text-[10px] ${aktifSekme === 'ekle' ? 'text-orange-600 font-bold' : 'text-slate-500 hover:text-orange-500'}`}><PlusCircle size={22} className="mb-1" /> Yönetim</button>
-        <button onClick={navClickTarifler} className={`flex-1 flex flex-col items-center p-2 rounded-lg text-[10px] ${aktifSekme === 'tarifler' ? 'text-orange-600 font-bold' : 'text-slate-500 hover:text-orange-500'}`}><List size={22} className="mb-1" /> Tariflerim</button>
-        <button onClick={navClickMenuler} className={`flex-1 flex flex-col items-center p-2 rounded-lg text-[10px] ${aktifSekme === 'menuler' ? 'text-orange-600 font-bold' : 'text-slate-500 hover:text-orange-500'}`}><Layers size={22} className="mb-1" /> Menüler</button>
-        <button onClick={() => setAktifSekme('plan')} className={`flex-1 flex flex-col items-center p-2 rounded-lg text-[10px] ${aktifSekme === 'plan' ? 'text-orange-600 font-bold' : 'text-slate-500 hover:text-orange-500'}`}><CalendarDays size={22} className="mb-1" /> Plan</button>
+      {/* 4. YENİ: MOBİL ALT MENÜ (Sticky Hover Düzeltildi, Animasyon Eklendi) */}
+      <div 
+        className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-[0_-10px_20px_rgba(0,0,0,0.04)] flex justify-between items-center px-2 py-2 z-50 print:hidden"
+        style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}
+      >
+        <button onClick={navClickEkle} className={`flex-1 flex flex-col items-center p-2 rounded-xl text-[10px] sm:text-xs transition-all active:scale-95 ${aktifSekmeState === 'ekle' ? 'text-orange-600 font-extrabold bg-orange-50' : 'text-slate-500'}`}>
+          <PlusCircle size={24} className="mb-1" /> Yönetim
+        </button>
+        <button onClick={navClickTarifler} className={`flex-1 flex flex-col items-center p-2 rounded-xl text-[10px] sm:text-xs transition-all active:scale-95 ${aktifSekmeState === 'tarifler' ? 'text-orange-600 font-extrabold bg-orange-50' : 'text-slate-500'}`}>
+          <List size={24} className="mb-1" /> Tariflerim
+        </button>
+        <button onClick={navClickMenuler} className={`flex-1 flex flex-col items-center p-2 rounded-xl text-[10px] sm:text-xs transition-all active:scale-95 ${aktifSekmeState === 'menuler' ? 'text-orange-600 font-extrabold bg-orange-50' : 'text-slate-500'}`}>
+          <Layers size={24} className="mb-1" /> Menüler
+        </button>
+        <button onClick={() => setAktifSekme('plan')} className={`flex-1 flex flex-col items-center p-2 rounded-xl text-[10px] sm:text-xs transition-all active:scale-95 ${aktifSekmeState === 'plan' ? 'text-orange-600 font-extrabold bg-orange-50' : 'text-slate-500'}`}>
+          <CalendarDays size={24} className="mb-1" /> Plan
+        </button>
       </div>
 
       <main className="max-w-5xl mx-auto p-4 sm:p-6 print:p-0 print:max-w-none">
         
-        {aktifSekme === 'ekle' && (
+        {aktifSekmeState === 'ekle' && (
           <YeniEkle 
             yeniTarif={yeniTarif} setYeniTarif={setYeniTarif} yeniMenu={yeniMenu} setYeniMenu={setYeniMenu}
             tarifler={tarifler} menuler={menuler} tarifKaydet={tarifKaydet} menuKaydet={menuKaydet}
@@ -349,7 +382,7 @@ export default function App() {
           />
         )}
 
-        {aktifSekme === 'tarifler' && (
+        {aktifSekmeState === 'tarifler' && (
           <div className="animate-in fade-in duration-300">
             {detayGosterilenTarif ? (
               <div className="bg-white rounded-xl shadow-md overflow-hidden pb-4">
@@ -499,7 +532,7 @@ export default function App() {
           </div>
         )}
 
-        {aktifSekme === 'menuler' && (
+        {aktifSekmeState === 'menuler' && (
           <Menulerim 
             menuler={menuler} tarifler={tarifler} getGunlukTopluMalzemeler={getGunlukTopluMalzemeler} 
             setAktifSekme={setAktifSekme} setDetayGosterilenTarif={setDetayGosterilenTarif}
@@ -508,7 +541,7 @@ export default function App() {
           />
         )}
 
-        {aktifSekme === 'plan' && (
+        {aktifSekmeState === 'plan' && (
           <HaftalikPlan 
             haftalikPlan={haftalikPlan} tarifler={tarifler} menuler={menuler} 
             planTemizle={planTemizle} plandanOgeSil={plandanOgeSil} 

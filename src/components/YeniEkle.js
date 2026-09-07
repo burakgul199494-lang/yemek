@@ -15,6 +15,8 @@ export default function YeniEkle({
   const [menuSeciliKategori, setMenuSeciliKategori] = useState('Tümü');
   const [yeniKatAd, setYeniKatAd] = useState('');
 
+  const isEditing = islemTipi === 'tarif' ? !!yeniTarif.id : !!yeniMenu.id;
+
   const handleTarifDuzenle = (t) => {
     let hazirlanisDizisi = [];
     if (Array.isArray(t.hazirlanis)) {
@@ -37,6 +39,14 @@ export default function YeniEkle({
     window.scrollTo({ top: 0, behavior: 'smooth' }); 
   };
 
+  const iptalEt = () => {
+    if (islemTipi === 'tarif') {
+      setYeniTarif({ ad: '', kategori: yemekKategorileri.find(k=>k!=='Kategorisiz')||'Kategorisiz', resim: '', malzemeler: [{ miktar: '', birim: 'gr', isim: '' }], hazirlanis: [{metin: '', resim: ''}] });
+    } else {
+      setYeniMenu({ ad: '', kategori: menuKategorileri.find(k=>k!=='Kategorisiz')||'Kategorisiz', tarifler: [], resim: '' });
+    }
+  };
+
   const handleKatEkle = (e) => { e.preventDefault(); kategoriEkle(islemTipi, yeniKatAd); setYeniKatAd(''); };
   const aktifKategoriler = islemTipi === 'tarif' ? yemekKategorileri : menuKategorileri;
   const gosterilenKategoriler = aktifKategoriler.filter(k => k !== 'Kategorisiz');
@@ -55,25 +65,27 @@ export default function YeniEkle({
 
       {/* ANA SEKMELER (Yemek / Menü) */}
       <div className="flex bg-orange-100 p-1 rounded-xl mb-4">
-        <button onClick={() => setIslemTipi('tarif')} className={`flex-1 py-3 rounded-lg font-bold flex items-center justify-center transition-all ${islemTipi === 'tarif' ? 'bg-white text-orange-600 shadow-sm' : 'text-orange-800/60 hover:text-orange-800'}`}><ChefHat size={20} className="mr-2" /> Yemek Yönetimi</button>
-        <button onClick={() => setIslemTipi('menu')} className={`flex-1 py-3 rounded-lg font-bold flex items-center justify-center transition-all ${islemTipi === 'menu' ? 'bg-white text-orange-600 shadow-sm' : 'text-orange-800/60 hover:text-orange-800'}`}><Layers size={20} className="mr-2" /> Menü Yönetimi</button>
+        <button onClick={() => {setIslemTipi('tarif'); iptalEt();}} className={`flex-1 py-3 rounded-lg font-bold flex items-center justify-center transition-all ${islemTipi === 'tarif' ? 'bg-white text-orange-600 shadow-sm' : 'text-orange-800/60 hover:text-orange-800'}`}><ChefHat size={20} className="mr-2" /> Yemek Yönetimi</button>
+        <button onClick={() => {setIslemTipi('menu'); iptalEt();}} className={`flex-1 py-3 rounded-lg font-bold flex items-center justify-center transition-all ${islemTipi === 'menu' ? 'bg-white text-orange-600 shadow-sm' : 'text-orange-800/60 hover:text-orange-800'}`}><Layers size={20} className="mr-2" /> Menü Yönetimi</button>
       </div>
 
-      {/* ALT SAYFA SEKMELERİ (Ekle / Mevcutlar / Kategoriler) */}
-      <div className="flex gap-2 mb-6 bg-white p-2 rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
-        <button onClick={() => setAltSayfa('ekle')} className={`whitespace-nowrap px-4 py-2 rounded-lg font-bold text-sm transition-colors flex-1 ${altSayfa === 'ekle' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}><Plus size={16} className="inline mr-1"/> Yeni {islemTipi === 'tarif' ? 'Yemek' : 'Menü'} Ekle</button>
-        <button onClick={() => {setAltSayfa('mevcutlar'); setAramaMevcut('');}} className={`whitespace-nowrap px-4 py-2 rounded-lg font-bold text-sm transition-colors flex-1 ${altSayfa === 'mevcutlar' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}><List size={16} className="inline mr-1"/> Mevcutları Düzenle</button>
-        <button onClick={() => setAltSayfa('kategoriler')} className={`whitespace-nowrap px-4 py-2 rounded-lg font-bold text-sm transition-colors flex-1 ${altSayfa === 'kategoriler' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}><FolderPlus size={16} className="inline mr-1"/> Kategoriler</button>
+      {/* ALT SAYFA SEKMELERİ (Mobil Uyumlu) */}
+      <div className="flex flex-col sm:flex-row gap-2 mb-6 bg-white p-2 rounded-xl border border-slate-200 shadow-sm">
+        <button onClick={() => {setAltSayfa('ekle');}} className={`whitespace-nowrap px-4 py-2 rounded-lg font-bold text-sm transition-colors flex-1 flex items-center justify-center ${altSayfa === 'ekle' ? (isEditing ? 'bg-orange-600 text-white' : 'bg-slate-800 text-white') : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}><Plus size={16} className="inline mr-1"/> {isEditing ? 'Düzenleme Modu' : (islemTipi === 'tarif' ? 'Yeni Yemek Ekle' : 'Yeni Menü Ekle')}</button>
+        <button onClick={() => {setAltSayfa('mevcutlar'); setAramaMevcut(''); iptalEt();}} className={`whitespace-nowrap px-4 py-2 rounded-lg font-bold text-sm transition-colors flex-1 flex items-center justify-center ${altSayfa === 'mevcutlar' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}><List size={16} className="inline mr-1"/> Mevcutları Düzenle</button>
+        <button onClick={() => {setAltSayfa('kategoriler'); iptalEt();}} className={`whitespace-nowrap px-4 py-2 rounded-lg font-bold text-sm transition-colors flex-1 flex items-center justify-center ${altSayfa === 'kategoriler' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}><FolderPlus size={16} className="inline mr-1"/> Kategoriler</button>
       </div>
 
       {/* 1. ALT SAYFA: YENİ EKLE / GÜNCELLE FORMU */}
       {altSayfa === 'ekle' && (
         <div className="bg-white p-4 sm:p-6 rounded-xl shadow-md border border-orange-100 mb-6 animate-in fade-in zoom-in-95 duration-200">
-          <div className="border-b border-slate-100 mb-6 pb-2">
-            <h2 className="text-xl font-extrabold text-slate-800">
-              {islemTipi === 'tarif' ? (yeniTarif.id ? 'Yemeği Güncelle' : 'Yeni Yemek Ekle') : (yeniMenu.id ? 'Menüyü Güncelle' : 'Yeni Menü Ekle')}
-            </h2>
-          </div>
+          
+          {isEditing && (
+            <div className="bg-orange-100 text-orange-800 p-3 rounded-lg font-bold mb-6 flex flex-col sm:flex-row justify-between items-center gap-2 border border-orange-200">
+              <span className="flex items-center text-sm sm:text-base"><Edit size={18} className="mr-2"/> Şu anda "{islemTipi === 'tarif' ? yeniTarif.ad : yeniMenu.ad}" güncelleniyor.</span>
+              <button onClick={iptalEt} className="text-orange-600 hover:text-orange-800 underline text-sm whitespace-nowrap">İptal Et / Yeni Ekle</button>
+            </div>
+          )}
 
           {islemTipi === 'tarif' ? (
             <form onSubmit={(e) => { tarifKaydet(e); setAltSayfa('mevcutlar'); }} className="space-y-5">
@@ -91,19 +103,13 @@ export default function YeniEkle({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Ana Yemek Fotoğrafı</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Ana Yemek Fotoğrafı (Opsiyonel)</label>
                   <div className="flex items-center gap-4">
                     <div className="relative overflow-hidden w-24 h-24 bg-orange-50 border-2 border-dashed border-orange-200 rounded-xl flex items-center justify-center text-orange-400 hover:bg-orange-100 transition-colors">
-                      {yeniTarif.resim ? (
-                        <img src={yeniTarif.resim} alt="Tarif" className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="flex flex-col items-center"><ImageIcon size={24} /><span className="text-[10px] mt-1 font-bold">Resim Seç</span></div>
-                      )}
+                      {yeniTarif.resim ? <img src={yeniTarif.resim} alt="Tarif" className="w-full h-full object-cover" /> : <div className="flex flex-col items-center"><ImageIcon size={24} /><span className="text-[10px] mt-1 font-bold">Resim Seç</span></div>}
                       <input type="file" accept="image/*" onChange={(e) => resimYukle(e, 'tarif', null)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                     </div>
-                    {yeniTarif.resim && (
-                      <button type="button" onClick={() => setYeniTarif({...yeniTarif, resim: ''})} className="text-red-500 text-sm font-bold bg-red-50 px-3 py-1.5 rounded-lg hover:bg-red-100 transition-colors">Fotoğrafı Kaldır</button>
-                    )}
+                    {yeniTarif.resim && <button type="button" onClick={() => setYeniTarif({...yeniTarif, resim: ''})} className="text-red-500 text-sm font-bold bg-red-50 px-3 py-1.5 rounded-lg hover:bg-red-100 transition-colors">Fotoğrafı Kaldır</button>}
                   </div>
                 </div>
 
@@ -147,8 +153,7 @@ export default function YeniEkle({
                             <div className="flex items-center gap-2">
                               {resim ? (
                                 <div className="flex items-center gap-2 bg-blue-50 border border-blue-100 p-1 pl-2 rounded-lg pr-1 w-fit">
-                                  <ImageIcon size={14} className="text-blue-500"/>
-                                  <span className="text-[10px] text-blue-700 font-bold">Resim Eklendi</span>
+                                  <ImageIcon size={14} className="text-blue-500"/><span className="text-[10px] text-blue-700 font-bold">Resim Eklendi</span>
                                   <button type="button" onClick={() => hazirlanisIslem.resimSil(index)} className="bg-white p-1 rounded-md text-red-500 hover:bg-red-50 ml-2 shadow-sm border border-slate-100"><X size={12}/></button>
                                 </div>
                               ) : (
@@ -166,10 +171,7 @@ export default function YeniEkle({
                   </div>
                 </div>
 
-                <div className="flex gap-3">
-                  {yeniTarif.id && <button type="button" onClick={() => { setYeniTarif({ ad: '', kategori: yemekKategorileri.find(k=>k!=='Kategorisiz')||'Kategorisiz', resim: '', malzemeler: [{ miktar: '', birim: 'gr', isim: '' }], hazirlanis: [{metin:'', resim:''}] }); setAltSayfa('mevcutlar'); }} className="w-1/3 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 rounded-xl shadow-sm text-lg transition-colors">İptal</button>}
-                  <button type="submit" className="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 rounded-xl shadow-md text-lg transition-colors">{yeniTarif.id ? 'Değişiklikleri Kaydet' : 'Tarifi Kaydet'}</button>
-                </div>
+                <button type="submit" className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 rounded-xl shadow-md text-lg transition-colors">{yeniTarif.id ? 'Değişiklikleri Kaydet' : 'Tarifi Kaydet'}</button>
             </form>
           ) : (
             <form onSubmit={(e) => { menuKaydet(e); setAltSayfa('mevcutlar'); }} className="space-y-6">
@@ -185,23 +187,21 @@ export default function YeniEkle({
                 <label className="block text-sm font-medium text-slate-700 mb-2">Menü Kapak Fotoğrafı (Opsiyonel)</label>
                 <div className="flex items-center gap-4">
                   <div className="relative overflow-hidden w-24 h-24 bg-orange-50 border-2 border-dashed border-orange-200 rounded-xl flex items-center justify-center text-orange-400 hover:bg-orange-100 transition-colors">
-                    {yeniMenu.resim ? (
-                      <img src={yeniMenu.resim} alt="Menü" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="flex flex-col items-center"><ImageIcon size={24} /><span className="text-[10px] mt-1 font-bold">Resim Seç</span></div>
-                    )}
+                    {yeniMenu.resim ? <img src={yeniMenu.resim} alt="Menü" className="w-full h-full object-cover" /> : <div className="flex flex-col items-center"><ImageIcon size={24} /><span className="text-[10px] mt-1 font-bold">Resim Seç</span></div>}
                     <input type="file" accept="image/*" onChange={(e) => resimYukle(e, 'menu', null)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                   </div>
-                  {yeniMenu.resim && (
-                    <button type="button" onClick={() => setYeniMenu({...yeniMenu, resim: ''})} className="text-red-500 text-sm font-bold bg-red-50 px-3 py-1.5 rounded-lg hover:bg-red-100 transition-colors">Fotoğrafı Kaldır</button>
-                  )}
+                  {yeniMenu.resim && <button type="button" onClick={() => setYeniMenu({...yeniMenu, resim: ''})} className="text-red-500 text-sm font-bold bg-red-50 px-3 py-1.5 rounded-lg hover:bg-red-100 transition-colors">Fotoğrafı Kaldır</button>}
                 </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">Yemek Seçimi</label>
                 <div className="flex gap-2 mb-3 flex-col sm:flex-row">
-                  <div className="relative flex-1"><Search size={16} className="absolute left-3 top-3 text-slate-400" /><input type="text" placeholder="Hızlıca yemek ara..." value={menuArananYemek} onChange={(e) => setMenuArananYemek(e.target.value)} className="w-full pl-9 p-2.5 border rounded-lg bg-slate-50 text-sm outline-none focus:ring-2 focus:ring-orange-500" /></div>
+                  <div className="relative flex-1">
+                    <Search size={16} className="absolute left-3 top-3 text-slate-400" />
+                    <input type="text" placeholder="Hızlıca yemek ara..." value={menuArananYemek} onChange={(e) => setMenuArananYemek(e.target.value)} className="w-full pl-9 p-2.5 border rounded-lg bg-slate-50 text-sm outline-none focus:ring-2 focus:ring-orange-500" />
+                    {menuArananYemek && <button type="button" onClick={() => setMenuArananYemek('')} className="absolute right-3 top-3 text-slate-400 hover:text-red-500"><X size={16}/></button>}
+                  </div>
                   <select value={menuSeciliKategori} onChange={(e) => setMenuSeciliKategori(e.target.value)} className="w-full sm:w-32 p-2.5 border rounded-lg bg-slate-50 text-sm outline-none"><option value="Tümü">Tümü</option>{yemekKategorileri.map(k => <option key={k} value={k}>{k}</option>)}</select>
                 </div>
                 <div className="max-h-72 overflow-y-auto border rounded-lg bg-white shadow-inner">
@@ -228,10 +228,7 @@ export default function YeniEkle({
                   {tarifler.length === 0 && <div className="p-4 text-center text-sm text-slate-500">Kayıtlı tarif bulunamadı.</div>}
                 </div>
               </div>
-              <div className="flex gap-3">
-                  {yeniMenu.id && <button type="button" onClick={() => { setYeniMenu({ ad: '', kategori: menuKategorileri.find(k=>k!=='Kategorisiz')||'Kategorisiz', tarifler: [], resim: '' }); setAltSayfa('mevcutlar'); }} className="w-1/3 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 rounded-xl shadow-sm text-lg transition-colors">İptal</button>}
-                  <button type="submit" className="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 rounded-xl shadow-md text-lg transition-colors">{yeniMenu.id ? 'Değişiklikleri Kaydet' : 'Menüyü Kaydet'}</button>
-              </div>
+              <button type="submit" className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 rounded-xl shadow-md text-lg transition-colors">{yeniMenu.id ? 'Değişiklikleri Kaydet' : 'Menüyü Kaydet'}</button>
             </form>
           )}
         </div>
@@ -241,12 +238,11 @@ export default function YeniEkle({
       {altSayfa === 'mevcutlar' && (
         <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-slate-200 animate-in fade-in zoom-in-95 duration-200">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 border-b border-slate-100 pb-4">
-            <h3 className="font-bold text-xl text-slate-800">
-              Mevcut {islemTipi === 'tarif' ? 'Yemekleri' : 'Menüleri'} Yönet
-            </h3>
+            <h3 className="font-bold text-xl text-slate-800">Mevcut {islemTipi === 'tarif' ? 'Yemekleri' : 'Menüleri'} Yönet</h3>
             <div className="relative w-full sm:w-64">
               <Search size={18} className="absolute left-3 top-2.5 text-slate-400" />
-              <input type="text" placeholder="İsme göre ara..." value={aramaMevcut} onChange={(e) => setAramaMevcut(e.target.value)} className="w-full pl-9 p-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 outline-none" />
+              <input type="text" placeholder="İsme göre ara..." value={aramaMevcut} onChange={(e) => setAramaMevcut(e.target.value)} className="w-full pl-9 pr-9 p-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 outline-none" />
+              {aramaMevcut && <button type="button" onClick={() => setAramaMevcut('')} className="absolute right-3 top-2.5 text-slate-400 hover:text-red-500"><X size={18}/></button>}
             </div>
           </div>
           
@@ -288,8 +284,8 @@ export default function YeniEkle({
                 </div>
               </div>
             ))}
-            {(islemTipi === 'tarif' && siraliTarifler.length === 0) && <div className="text-center py-8 text-slate-500">Listede gösterilecek öge bulunamadı.</div>}
-            {(islemTipi === 'menu' && siraliMenuler.length === 0) && <div className="text-center py-8 text-slate-500">Listede gösterilecek öge bulunamadı.</div>}
+            {(islemTipi === 'tarif' && siraliTarifler.length === 0) && <div className="text-center py-8 text-slate-500">Aramanıza uygun yemek bulunamadı.</div>}
+            {(islemTipi === 'menu' && siraliMenuler.length === 0) && <div className="text-center py-8 text-slate-500">Aramanıza uygun menü bulunamadı.</div>}
           </div>
         </div>
       )}
@@ -297,10 +293,7 @@ export default function YeniEkle({
       {/* 3. ALT SAYFA: KATEGORİ YÖNETİMİ */}
       {altSayfa === 'kategoriler' && (
         <div className="bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-700 text-white animate-in fade-in zoom-in-95 duration-200">
-          <h3 className="font-bold text-xl mb-6 border-b border-slate-700 pb-4 flex items-center">
-            <FolderPlus className="mr-3 text-orange-400" size={24}/> 
-            {islemTipi === 'tarif' ? 'Yemek Kategorilerini' : 'Menü Kategorilerini'} Yönet
-          </h3>
+          <h3 className="font-bold text-xl mb-6 border-b border-slate-700 pb-4 flex items-center"><FolderPlus className="mr-3 text-orange-400" size={24}/> {islemTipi === 'tarif' ? 'Yemek Kategorilerini' : 'Menü Kategorilerini'} Yönet</h3>
           <form onSubmit={handleKatEkle} className="flex gap-2 mb-6">
             <input type="text" placeholder="Yeni Kategori Adı" required value={yeniKatAd} onChange={e => setYeniKatAd(e.target.value)} className="flex-1 p-3 rounded-xl bg-slate-900 border border-slate-600 text-sm outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-400 transition-all" />
             <button type="submit" className="bg-orange-500 hover:bg-orange-600 px-6 rounded-xl font-bold text-sm transition-colors shadow-md">Ekle</button>

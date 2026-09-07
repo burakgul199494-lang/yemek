@@ -32,6 +32,8 @@ export default function YeniEkle({
   };
 
   const aktifKategoriler = islemTipi === 'tarif' ? yemekKategorileri : menuKategorileri;
+  // YENİ: Yönetim panelinde Kategorisiz klasörünü göstermiyoruz.
+  const gosterilenKategoriler = aktifKategoriler.filter(k => k !== 'Kategorisiz');
 
   return (
     <div className="max-w-3xl mx-auto animate-in fade-in duration-300 mb-8">
@@ -56,7 +58,8 @@ export default function YeniEkle({
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Kategori</label>
                   <select value={yeniTarif.kategori} onChange={(e) => setYeniTarif({...yeniTarif, kategori: e.target.value})} className="w-full p-3 border rounded-lg bg-slate-50 outline-none">
-                    {yemekKategorileri.map(k => <option key={k} value={k}>{k}</option>)}
+                    {/* YENİ: Seçeneklerden Kategorisiz silindi */}
+                    {yemekKategorileri.filter(k => k !== 'Kategorisiz').map(k => <option key={k} value={k}>{k}</option>)}
                   </select>
                 </div>
               </div>
@@ -114,7 +117,8 @@ export default function YeniEkle({
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Menü Kategorisi</label>
                 <select value={yeniMenu.kategori} onChange={(e) => setYeniMenu({...yeniMenu, kategori: e.target.value})} className="w-full p-3 border rounded-lg bg-slate-50 outline-none">
-                  {menuKategorileri.map(k => <option key={k} value={k}>{k}</option>)}
+                  {/* YENİ: Seçeneklerden Kategorisiz silindi */}
+                  {menuKategorileri.filter(k => k !== 'Kategorisiz').map(k => <option key={k} value={k}>{k}</option>)}
                 </select>
               </div>
             </div>
@@ -134,8 +138,8 @@ export default function YeniEkle({
 
               <div className="max-h-72 overflow-y-auto border rounded-lg bg-white shadow-inner">
                 {(() => {
-                  const gosterilecekKategoriler = menuSeciliKategori === 'Tümü' ? yemekKategorileri : [menuSeciliKategori];
-                  return gosterilecekKategoriler.map(kategori => {
+                  const filtreliKatlar = menuSeciliKategori === 'Tümü' ? yemekKategorileri : [menuSeciliKategori];
+                  return filtreliKatlar.map(kategori => {
                     const kategoriTarifleri = tarifler.filter(t => t.kategori === kategori && t.ad.toLowerCase().includes(menuArananYemek.toLowerCase()));
                     if (kategoriTarifleri.length === 0) return null;
                     return (
@@ -176,20 +180,20 @@ export default function YeniEkle({
         </form>
 
         <div className="space-y-2 max-h-56 overflow-y-auto pr-2 custom-scrollbar">
-          {aktifKategoriler.map((k, index) => (
+          {/* YENİ: Listede artık Kategorisiz yok */}
+          {gosterilenKategoriler.map((k, index) => (
             <div key={k} className="flex justify-between items-center bg-slate-700 px-3 py-2 rounded-lg text-sm border border-slate-600 hover:border-orange-500 transition-colors">
               <span className="font-medium text-base">{k}</span>
               <div className="flex items-center gap-1">
-                <button type="button" onClick={() => kategoriTasi(islemTipi, index, -1)} disabled={index === 0} className={`p-1.5 rounded-md transition-colors ${index === 0 ? 'text-slate-600 cursor-not-allowed' : 'text-slate-300 hover:text-white hover:bg-slate-600'}`}><ChevronUp size={18}/></button>
-                <button type="button" onClick={() => kategoriTasi(islemTipi, index, 1)} disabled={index === aktifKategoriler.length - 1} className={`p-1.5 rounded-md transition-colors ${index === aktifKategoriler.length - 1 ? 'text-slate-600 cursor-not-allowed' : 'text-slate-300 hover:text-white hover:bg-slate-600'}`}><ChevronDown size={18}/></button>
-                {k !== 'Kategorisiz' && <button type="button" onClick={() => kategoriSil(islemTipi, k)} className="ml-2 p-1.5 text-red-400 hover:text-red-300 hover:bg-red-400/20 rounded-md transition-colors"><Trash2 size={18}/></button>}
+                <button type="button" onClick={() => kategoriTasi(islemTipi, k, -1)} disabled={index === 0} className={`p-1.5 rounded-md transition-colors ${index === 0 ? 'text-slate-600 cursor-not-allowed' : 'text-slate-300 hover:text-white hover:bg-slate-600'}`}><ChevronUp size={18}/></button>
+                <button type="button" onClick={() => kategoriTasi(islemTipi, k, 1)} disabled={index === gosterilenKategoriler.length - 1} className={`p-1.5 rounded-md transition-colors ${index === gosterilenKategoriler.length - 1 ? 'text-slate-600 cursor-not-allowed' : 'text-slate-300 hover:text-white hover:bg-slate-600'}`}><ChevronDown size={18}/></button>
+                <button type="button" onClick={() => kategoriSil(islemTipi, k)} className="ml-2 p-1.5 text-red-400 hover:text-red-300 hover:bg-red-400/20 rounded-md transition-colors"><Trash2 size={18}/></button>
               </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* YENİ: HIZLI KATEGORİ DEĞİŞTİRMELİ LİSTE ALANI */}
       <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-slate-200">
         <h3 className="font-bold text-lg text-slate-800 mb-4 border-b pb-2">
           Mevcut {islemTipi === 'tarif' ? 'Yemekleri' : 'Menüleri'} Yönet
@@ -205,7 +209,8 @@ export default function YeniEkle({
                   onChange={(e) => hizliKategoriGuncelle('tarif', t.id, e.target.value)}
                   className="p-1.5 text-xs sm:text-sm font-medium border border-orange-200 rounded-lg bg-white text-orange-800 outline-none focus:ring-2 focus:ring-orange-500 flex-1 sm:w-36 shadow-sm"
                 >
-                  {yemekKategorileri.map(k => <option key={k} value={k}>{k}</option>)}
+                  {/* YENİ: Seçeneklerden Kategorisiz silindi */}
+                  {yemekKategorileri.filter(k => k !== 'Kategorisiz').map(k => <option key={k} value={k}>{k}</option>)}
                 </select>
                 
                 <div className="flex gap-1 shrink-0">
@@ -225,7 +230,8 @@ export default function YeniEkle({
                   onChange={(e) => hizliKategoriGuncelle('menu', m.id, e.target.value)}
                   className="p-1.5 text-xs sm:text-sm font-medium border border-orange-200 rounded-lg bg-white text-orange-800 outline-none focus:ring-2 focus:ring-orange-500 flex-1 sm:w-36 shadow-sm"
                 >
-                  {menuKategorileri.map(k => <option key={k} value={k}>{k}</option>)}
+                  {/* YENİ: Seçeneklerden Kategorisiz silindi */}
+                  {menuKategorileri.filter(k => k !== 'Kategorisiz').map(k => <option key={k} value={k}>{k}</option>)}
                 </select>
                 
                 <div className="flex gap-1 shrink-0">

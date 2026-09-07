@@ -509,10 +509,11 @@ export default function App() {
         )}
 
         {/* YENİ PROP EKLENDİ: plandanOgeSil ve menuler */}
-        {aktifSekme === 'plan' && (
+          {aktifSekme === 'plan' && (
           <HaftalikPlan 
             haftalikPlan={haftalikPlan} tarifler={tarifler} menuler={menuler} 
             planTemizle={planTemizle} plandanOgeSil={plandanOgeSil} 
+            getGunlukTopluMalzemeler={getGunlukTopluMalzemeler}
           />
         )}
       </main>

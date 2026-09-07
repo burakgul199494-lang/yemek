@@ -77,7 +77,7 @@ export default function HaftalikPlan({ haftalikPlan, tarifler, menuler, planTemi
             </button>
           </div>
           
-          <h2 className="text-2xl font-extrabold text-slate-800 mb-6 border-b-2 border-orange-200 pb-2">
+          <h2 className="text-2xl font-extrabold text-slate-800 mb-6 border-b-2 border-orange-200 pb-2 text-center sm:text-left">
             {gunObj.gunFormat} {gunObj.gunIsim} Programı
           </h2>
           
@@ -99,7 +99,7 @@ export default function HaftalikPlan({ haftalikPlan, tarifler, menuler, planTemi
             <div className="md:col-span-2 space-y-6">
               {gununTarifleri.map(tarif => (
                 <div key={tarif.id} className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                  <div className="flex justify-between items-start mb-4">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
                     <div>
                       <h3 className="text-xl font-bold text-slate-800 flex items-center">
                         <ChefHat className="mr-2 text-orange-500" size={22}/> {tarif.ad}
@@ -110,7 +110,7 @@ export default function HaftalikPlan({ haftalikPlan, tarifler, menuler, planTemi
                     </div>
                     <button 
                       onClick={() => { setDetayGosterilenTarif(tarif); setNeredenGeldi('plan'); setAktifSekme('tarifler'); }}
-                      className="text-xs text-blue-600 font-bold bg-blue-50 hover:bg-blue-100 px-3 py-2 rounded-lg border border-blue-200 transition-colors shrink-0 ml-2 shadow-sm"
+                      className="text-xs text-blue-600 font-bold bg-blue-50 hover:bg-blue-100 px-3 py-2 rounded-lg border border-blue-200 transition-colors shrink-0 shadow-sm"
                     >
                       Tam Detayı Gör →
                     </button>
@@ -154,6 +154,7 @@ export default function HaftalikPlan({ haftalikPlan, tarifler, menuler, planTemi
             <h1 className="text-3xl font-extrabold uppercase tracking-wider mb-2">Günlük Mutfak Programı</h1>
             <p className="text-xl font-bold text-gray-700">{gunObj.gunFormat} {gunObj.gunIsim}</p>
           </div>
+
           <div className="mb-8">
             <h2 className="text-2xl font-bold border-b-2 border-gray-400 mb-4 pb-1">Günlük İhtiyaç Listesi</h2>
             <div className="flex flex-col space-y-4">
@@ -166,11 +167,13 @@ export default function HaftalikPlan({ haftalikPlan, tarifler, menuler, planTemi
               ))}
             </div>
           </div>
+
           <div className="break-before-page">
             <div className="text-center border-b-2 border-black pb-4 mb-6 pt-4">
               <h1 className="text-3xl font-extrabold uppercase tracking-wider mb-2">Tarifler ve Yapılışları</h1>
               <p className="text-lg font-medium text-gray-700">{gunObj.gunFormat} {gunObj.gunIsim}</p>
             </div>
+            
             {gununTarifleri.map(t => (
               <div key={t.id} className="mb-8 break-inside-avoid border border-gray-300 p-4 rounded-lg">
                 <h3 className="text-xl font-bold mb-3 flex items-center bg-gray-100 p-2 rounded">{t.ad}</h3>
@@ -201,10 +204,12 @@ export default function HaftalikPlan({ haftalikPlan, tarifler, menuler, planTemi
     <div>
       <div className="animate-in fade-in duration-300 mb-12 print:hidden">
         <div className="flex flex-col sm:flex-row justify-between items-center mb-6 bg-white p-4 rounded-xl shadow-sm border border-slate-200 gap-4">
-          <h2 className="text-xl font-bold text-orange-800 flex items-center"><CalendarDays className="mr-2" size={24} /> Haftalık Menü Planı</h2>
-          <div className="flex items-center gap-3">
+          <h2 className="text-xl font-bold text-orange-800 flex items-center w-full justify-center sm:w-auto sm:justify-start">
+            <CalendarDays className="mr-2" size={24} /> Haftalık Menü Planı
+          </h2>
+          <div className="flex items-center justify-center gap-3 w-full sm:w-auto">
             <button onClick={() => haftaDegistir(-1)} className="p-2 bg-orange-50 hover:bg-orange-100 text-orange-800 rounded-lg border border-orange-200 transition-colors"><ChevronLeft size={20} /></button>
-            <span className="font-bold text-sm sm:text-base text-slate-700 min-w-[200px] text-center">{haftaAraligiMetni}</span>
+            <span className="font-bold text-xs sm:text-base text-slate-700 min-w-[160px] sm:min-w-[200px] text-center">{haftaAraligiMetni}</span>
             <button onClick={() => haftaDegistir(1)} className="p-2 bg-orange-50 hover:bg-orange-100 text-orange-800 rounded-lg border border-orange-200 transition-colors"><ChevronRight size={20} /></button>
           </div>
         </div>
@@ -223,12 +228,14 @@ export default function HaftalikPlan({ haftalikPlan, tarifler, menuler, planTemi
             return (
               <div key={gun.isoStr} className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex flex-col justify-between">
                 <div>
-                  <div className="border-b pb-2 mb-3 flex justify-between items-start">
+                  <div className="border-b pb-2 mb-3 flex flex-col sm:flex-row justify-between items-center sm:items-start gap-2 text-center sm:text-left">
                     <div>
                       <span className="block font-bold text-slate-800 text-sm xl:text-base">{gun.gunFormat}</span>
                       <span className="text-xs text-slate-500 font-medium">{gun.gunIsim}</span>
                     </div>
-                    {planKaydi && <button onClick={() => planTemizle(gun.isoStr)} className="text-slate-400 hover:text-red-600 bg-slate-50 hover:bg-red-50 p-1.5 rounded-lg transition-colors" title="Tüm Günü Temizle"><Trash2 size={16} /></button>}
+                    {planKaydi && (
+                      <button onClick={() => planTemizle(gun.isoStr)} className="text-slate-400 hover:text-red-600 bg-slate-50 hover:bg-red-50 p-1.5 rounded-lg transition-colors mt-1 sm:mt-0 w-full sm:w-auto flex justify-center" title="Tüm Günü Temizle"><Trash2 size={16} /></button>
+                    )}
                   </div>
 
                   {planKaydi ? (
@@ -250,7 +257,7 @@ export default function HaftalikPlan({ haftalikPlan, tarifler, menuler, planTemi
 
                       {ekstraTarifler.length > 0 && (
                         <div className="mb-3 bg-blue-50/70 p-2 rounded-xl border border-blue-100 shadow-sm">
-                          <div className="mb-2"><span className="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded flex w-fit">🍽️ Ekstra Seçimler</span></div>
+                          <div className="mb-2"><span className="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded flex w-fit mx-auto sm:mx-0">🍽️ Ekstra Seçimler</span></div>
                           <div className="space-y-1.5">
                             {ekstraTarifler.map(t => (
                               <div key={t.id} className="bg-white p-1.5 rounded-lg border border-blue-50 flex justify-between items-center shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
@@ -276,11 +283,11 @@ export default function HaftalikPlan({ haftalikPlan, tarifler, menuler, planTemi
         </div>
 
         <div className="bg-orange-50 p-6 rounded-2xl border border-orange-200 shadow-sm">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b border-orange-200 pb-4 gap-4">
+          <div className="flex flex-col sm:flex-row justify-between items-center mb-6 border-b border-orange-200 pb-4 gap-4">
             <h3 className="text-xl font-bold text-orange-900 flex items-center"><ShoppingCart className="mr-2 text-orange-600" size={24} /> Toplu Alışveriş Listesi</h3>
             {haftalikAlisveris.length > 0 && <button onClick={() => window.print()} className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold flex items-center shadow-md transition-colors w-full sm:w-auto justify-center"><Printer size={18} className="mr-2" /> PDF / Çıktı Al</button>}
           </div>
-          {haftalikAlisveris.length === 0 ? <p className="text-sm text-slate-500 italic">Bu hafta için henüz planlanmış bir menü bulunmuyor.</p> : (
+          {haftalikAlisveris.length === 0 ? <p className="text-sm text-slate-500 italic text-center sm:text-left">Bu hafta için henüz planlanmış bir menü bulunmuyor.</p> : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               {haftalikAlisveris.map((item, idx) => (
                 <div key={idx} className="bg-white p-3 rounded-xl border border-orange-100 shadow-sm flex justify-between items-center">

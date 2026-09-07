@@ -5,7 +5,7 @@ export default function YeniEkle({
   yeniTarif, setYeniTarif, yeniMenu, setYeniMenu, tarifler, menuler,
   tarifKaydet, menuKaydet, yemekKategorileri, menuKategorileri, BIRIMLER, 
   malzemeIslem, hazirlanisIslem, resimYukle, menuTarifToggle, tarifSil, menuSil,
-  kategoriEkle, kategoriSil, kategoriTasi
+  kategoriEkle, kategoriSil, kategoriTasi, hizliKategoriGuncelle
 }) {
   const [islemTipi, setIslemTipi] = useState('tarif');
   const [menuArananYemek, setMenuArananYemek] = useState('');
@@ -164,7 +164,6 @@ export default function YeniEkle({
         )}
       </div>
 
-      {/* DİNAMİK KATEGORİ YÖNETİMİ & SIRALAMA ALANI */}
       <div className="bg-slate-800 p-4 sm:p-6 rounded-xl shadow-sm mb-6 text-white">
         <h3 className="font-bold text-lg mb-4 border-b border-slate-700 pb-2 flex items-center">
           <FolderPlus className="mr-2 text-orange-400" size={20}/> 
@@ -181,56 +180,58 @@ export default function YeniEkle({
             <div key={k} className="flex justify-between items-center bg-slate-700 px-3 py-2 rounded-lg text-sm border border-slate-600 hover:border-orange-500 transition-colors">
               <span className="font-medium text-base">{k}</span>
               <div className="flex items-center gap-1">
-                {/* YUKARI TAŞIMA BUTONU */}
-                <button 
-                  type="button" 
-                  onClick={() => kategoriTasi(islemTipi, index, -1)} 
-                  disabled={index === 0} 
-                  className={`p-1.5 rounded-md transition-colors ${index === 0 ? 'text-slate-600 cursor-not-allowed' : 'text-slate-300 hover:text-white hover:bg-slate-600'}`}
-                >
-                  <ChevronUp size={18}/>
-                </button>
-                {/* AŞAĞI TAŞIMA BUTONU */}
-                <button 
-                  type="button" 
-                  onClick={() => kategoriTasi(islemTipi, index, 1)} 
-                  disabled={index === aktifKategoriler.length - 1} 
-                  className={`p-1.5 rounded-md transition-colors ${index === aktifKategoriler.length - 1 ? 'text-slate-600 cursor-not-allowed' : 'text-slate-300 hover:text-white hover:bg-slate-600'}`}
-                >
-                  <ChevronDown size={18}/>
-                </button>
-                {/* SİL BUTONU (Kategorisiz Hariç) */}
-                {k !== 'Kategorisiz' && (
-                  <button type="button" onClick={() => kategoriSil(islemTipi, k)} className="ml-2 p-1.5 text-red-400 hover:text-red-300 hover:bg-red-400/20 rounded-md transition-colors">
-                    <Trash2 size={18}/>
-                  </button>
-                )}
+                <button type="button" onClick={() => kategoriTasi(islemTipi, index, -1)} disabled={index === 0} className={`p-1.5 rounded-md transition-colors ${index === 0 ? 'text-slate-600 cursor-not-allowed' : 'text-slate-300 hover:text-white hover:bg-slate-600'}`}><ChevronUp size={18}/></button>
+                <button type="button" onClick={() => kategoriTasi(islemTipi, index, 1)} disabled={index === aktifKategoriler.length - 1} className={`p-1.5 rounded-md transition-colors ${index === aktifKategoriler.length - 1 ? 'text-slate-600 cursor-not-allowed' : 'text-slate-300 hover:text-white hover:bg-slate-600'}`}><ChevronDown size={18}/></button>
+                {k !== 'Kategorisiz' && <button type="button" onClick={() => kategoriSil(islemTipi, k)} className="ml-2 p-1.5 text-red-400 hover:text-red-300 hover:bg-red-400/20 rounded-md transition-colors"><Trash2 size={18}/></button>}
               </div>
             </div>
           ))}
         </div>
       </div>
 
+      {/* YENİ: HIZLI KATEGORİ DEĞİŞTİRMELİ LİSTE ALANI */}
       <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-slate-200">
         <h3 className="font-bold text-lg text-slate-800 mb-4 border-b pb-2">
           Mevcut {islemTipi === 'tarif' ? 'Yemekleri' : 'Menüleri'} Yönet
         </h3>
-        <div className="space-y-2 max-h-60 overflow-y-auto">
+        <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
           {islemTipi === 'tarif' && tarifler.map(t => (
-            <div key={t.id} className="flex justify-between items-center p-3 bg-slate-50 border rounded-lg hover:border-orange-200 transition-colors">
-              <span className="font-medium text-slate-700">{t.ad}</span>
-              <div className="flex gap-1">
-                <button onClick={() => handleTarifDuzenle(t)} className="text-blue-500 hover:bg-blue-100 p-2 rounded-lg transition-colors"><Edit size={18}/></button>
-                <button onClick={() => tarifSil(t.id)} className="text-red-500 hover:bg-red-100 p-2 rounded-lg transition-colors"><Trash2 size={18}/></button>
+            <div key={t.id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 bg-slate-50 border rounded-lg hover:border-orange-300 transition-colors gap-3">
+              <span className="font-bold text-slate-700 flex-1">{t.ad}</span>
+              
+              <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                <select 
+                  value={t.kategori} 
+                  onChange={(e) => hizliKategoriGuncelle('tarif', t.id, e.target.value)}
+                  className="p-1.5 text-xs sm:text-sm font-medium border border-orange-200 rounded-lg bg-white text-orange-800 outline-none focus:ring-2 focus:ring-orange-500 flex-1 sm:w-36 shadow-sm"
+                >
+                  {yemekKategorileri.map(k => <option key={k} value={k}>{k}</option>)}
+                </select>
+                
+                <div className="flex gap-1 shrink-0">
+                  <button onClick={() => handleTarifDuzenle(t)} className="text-blue-500 hover:bg-blue-100 p-2 rounded-lg transition-colors"><Edit size={18}/></button>
+                  <button onClick={() => tarifSil(t.id)} className="text-red-500 hover:bg-red-100 p-2 rounded-lg transition-colors"><Trash2 size={18}/></button>
+                </div>
               </div>
             </div>
           ))}
           {islemTipi === 'menu' && menuler.map(m => (
-            <div key={m.id} className="flex justify-between items-center p-3 bg-slate-50 border rounded-lg hover:border-orange-200 transition-colors">
-              <span className="font-medium text-slate-700">{m.ad}</span>
-              <div className="flex gap-1">
-                <button onClick={() => handleMenuDuzenle(m)} className="text-blue-500 hover:bg-blue-100 p-2 rounded-lg transition-colors"><Edit size={18}/></button>
-                <button onClick={() => menuSil(m.id)} className="text-red-500 hover:bg-red-100 p-2 rounded-lg transition-colors"><Trash2 size={18}/></button>
+            <div key={m.id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 bg-slate-50 border rounded-lg hover:border-orange-300 transition-colors gap-3">
+              <span className="font-bold text-slate-700 flex-1">{m.ad}</span>
+              
+              <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                <select 
+                  value={m.kategori} 
+                  onChange={(e) => hizliKategoriGuncelle('menu', m.id, e.target.value)}
+                  className="p-1.5 text-xs sm:text-sm font-medium border border-orange-200 rounded-lg bg-white text-orange-800 outline-none focus:ring-2 focus:ring-orange-500 flex-1 sm:w-36 shadow-sm"
+                >
+                  {menuKategorileri.map(k => <option key={k} value={k}>{k}</option>)}
+                </select>
+                
+                <div className="flex gap-1 shrink-0">
+                  <button onClick={() => handleMenuDuzenle(m)} className="text-blue-500 hover:bg-blue-100 p-2 rounded-lg transition-colors"><Edit size={18}/></button>
+                  <button onClick={() => menuSil(m.id)} className="text-red-500 hover:bg-red-100 p-2 rounded-lg transition-colors"><Trash2 size={18}/></button>
+                </div>
               </div>
             </div>
           ))}

@@ -30,7 +30,6 @@ export default function App() {
   const [aktifSekmeState, setAktifSekmeState] = useState(getBaslangicSekmesi);
   const setAktifSekme = (sekme) => { window.location.hash = sekme; setAktifSekmeState(sekme); };
 
-  // YENİ: Admin değilse ve Ekleme sekmesine girmeye çalışıyorsa Tariflere geri at
   useEffect(() => {
     if (kullanici && veriYuklendi && !isAdmin && aktifSekmeState === 'ekle') {
       setAktifSekme('tarifler');
@@ -67,24 +66,20 @@ export default function App() {
   const [resimYukleniyor, setResimYukleniyor] = useState(false);
   const [acikResim, setAcikResim] = useState(null);
 
-  // YENİ: ORTAK VERİTABANI MİMARİSİ
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setKullanici(currentUser);
       if (currentUser) {
         const _isAdmin = currentUser.email === ADMIN_EMAIL;
         
-        // 1. Herkesin göreceği ortak menüleri ve tarifleri çek
         const ortakRef = doc(db, "sistem", "ortakVeri");
         const ortakSnap = await getDoc(ortakRef);
         let ortakData = ortakSnap.exists() ? ortakSnap.data() : null;
 
-        // 2. Kişiye özel plan verisini çek
         const userRef = doc(db, "kullanicilar", currentUser.uid);
         const userSnap = await getDoc(userRef);
         const userData = userSnap.exists() ? userSnap.data() : {};
 
-        // 3. Admin ilk kez giriyorsa kendi eski verilerini Ortak Sisteme aktarır (Veri kaybı olmaması için)
         if (_isAdmin && !ortakData && userData.tarifler) {
           ortakData = {
             tarifler: userData.tarifler || [],
@@ -110,17 +105,11 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
-  // YENİ: KAYDETME MİMARİSİ
   useEffect(() => {
     if (kullanici && veriYuklendi) {
-      // 1. Herkes kendi haftalık planını kendi profiline kaydeder
       setDoc(doc(db, "kullanicilar", kullanici.uid), { haftalikPlan }, { merge: true });
-      
-      // 2. Eğer admin işlem yapıyorsa, menü ve tarifleri Ana Sisteme kaydeder
       if (kullanici.email === ADMIN_EMAIL) {
-        setDoc(doc(db, "sistem", "ortakVeri"), {
-          tarifler, menuler, yemekKategorileri, menuKategorileri
-        }, { merge: true });
+        setDoc(doc(db, "sistem", "ortakVeri"), { tarifler, menuler, yemekKategorileri, menuKategorileri }, { merge: true });
       }
     }
   }, [tarifler, menuler, haftalikPlan, yemekKategorileri, menuKategorileri, kullanici, veriYuklendi]);
@@ -134,7 +123,7 @@ export default function App() {
     const formData = new FormData();
     formData.append('image', dosya);
     try {
-      const IMGBB_API_KEY = "329fb6a18d6667bf935aecfbd2c20d43"; // Kendi ImgBB anahtarını yapıştır
+      const IMGBB_API_KEY = "329fb6a18d6667bf935aecfbd2c20d43"; 
       const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: 'POST', body: formData });
       const data = await response.json();
       if (data.success) {
@@ -305,7 +294,7 @@ export default function App() {
     setTarifPlanModalAcik(false);
     setPlanModaliIcinTarif(null);
     setTarifPlanTarihi('');
-    alert(`"${islemGorenTarif.ad}" ${formatTarihDuzenli(tarifPlanTarihi)} tarihine başarıyla eklendi!`);
+    alert(`"${islemGorenTarif.ad}" plana başarıyla eklendi!`);
   };
 
   const formatTarihDuzenli = (iso) => { if (!iso) return ''; const p = iso.split('-'); return `${p[2]}.${p[1]}.${p[0]}`; };
@@ -356,7 +345,8 @@ export default function App() {
   if (!kullanici) return <Login />;
 
   return (
-    <div className="min-h-screen bg-orange-50 text-slate-800 font-sans pb-28 md:pb-6 print:pb-0 print:bg-white">
+    // YENİ: Ana taşıyıcıya [-webkit-tap-highlight-color:transparent] eklendi!
+    <div className="min-h-screen bg-orange-50 text-slate-800 font-sans pb-28 md:pb-6 print:pb-0 print:bg-white [-webkit-tap-highlight-color:transparent]">
       <nav className="bg-orange-600 text-white shadow-md print:hidden sticky top-0 z-10">
         <div className="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
           <div className="flex items-center space-x-2 font-bold text-xl"><ChefHat size={28} /><span className="hidden sm:inline">Bizim Mutfak</span></div>
@@ -370,7 +360,8 @@ export default function App() {
         </div>
       </nav>
 
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-[0_-10px_20px_rgba(0,0,0,0.04)] flex justify-between items-center px-2 py-2 z-50 print:hidden" style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}>
+      {/* YENİ: Mobildeki butonlara select-none ve touch-manipulation eklendi */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-[0_-10px_20px_rgba(0,0,0,0.04)] flex justify-between items-center px-2 py-2 z-50 print:hidden select-none touch-manipulation" style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}>
         {isAdmin && <button onClick={navClickEkle} className={`flex-1 flex flex-col items-center p-2 rounded-xl text-[10px] sm:text-xs transition-all active:scale-95 ${aktifSekmeState === 'ekle' ? 'text-orange-600 font-extrabold bg-orange-50' : 'text-slate-500'}`}><PlusCircle size={24} className="mb-1" /> Yönetim</button>}
         <button onClick={navClickTarifler} className={`flex-1 flex flex-col items-center p-2 rounded-xl text-[10px] sm:text-xs transition-all active:scale-95 ${aktifSekmeState === 'tarifler' ? 'text-orange-600 font-extrabold bg-orange-50' : 'text-slate-500'}`}><List size={24} className="mb-1" /> Tariflerim</button>
         <button onClick={navClickMenuler} className={`flex-1 flex flex-col items-center p-2 rounded-xl text-[10px] sm:text-xs transition-all active:scale-95 ${aktifSekmeState === 'menuler' ? 'text-orange-600 font-extrabold bg-orange-50' : 'text-slate-500'}`}><Layers size={24} className="mb-1" /> Menüler</button>
@@ -446,8 +437,7 @@ export default function App() {
                 </div>
                 <div className="relative mb-6">
                   <Search size={20} className="absolute left-4 top-3.5 text-slate-400" />
-                  <input type="text" placeholder={`"${tarifKlasoru}" içinde yemek ara...`} value={tarifArama} onChange={(e) => setTarifArama(e.target.value)} className="w-full pl-12 p-3 border border-orange-200 rounded-xl outline-none focus:ring-2 focus:ring-orange-500 shadow-sm text-base" />
-                  {/* YENİ: ARAMA TEMİZLEME ÇARPISI */}
+                  <input type="text" placeholder={`"${tarifKlasoru}" içinde yemek ara...`} value={tarifArama} onChange={(e) => setTarifArama(e.target.value)} className="w-full pl-12 pr-9 p-3 border border-orange-200 rounded-xl outline-none focus:ring-2 focus:ring-orange-500 shadow-sm text-base" />
                   {tarifArama && <button onClick={() => setTarifArama('')} className="absolute right-4 top-3.5 text-slate-400 hover:text-red-500 transition-colors"><X size={20}/></button>}
                 </div>
                 <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-8">
@@ -481,7 +471,7 @@ export default function App() {
                 <h2 className="text-xl sm:text-2xl font-bold mb-6 text-orange-800 border-b-2 border-orange-200 pb-2 flex items-center"><Folder className="mr-2" size={24}/> Yemek Kategorileri</h2>
                 <div className="relative mb-6">
                   <Search size={20} className="absolute left-4 top-3.5 text-slate-400" />
-                  <input type="text" placeholder="Tüm tariflerde yemek ara..." value={genelTarifArama} onChange={(e) => setGenelTarifArama(e.target.value)} className="w-full pl-12 p-3 border border-orange-200 rounded-xl outline-none focus:ring-2 focus:ring-orange-500 shadow-sm text-base bg-white" />
+                  <input type="text" placeholder="Tüm tariflerde yemek ara..." value={genelTarifArama} onChange={(e) => setGenelTarifArama(e.target.value)} className="w-full pl-12 pr-9 p-3 border border-orange-200 rounded-xl outline-none focus:ring-2 focus:ring-orange-500 shadow-sm text-base bg-white" />
                   {genelTarifArama && <button onClick={() => setGenelTarifArama('')} className="absolute right-4 top-3.5 text-slate-400 hover:text-red-500 transition-colors"><X size={20}/></button>}
                 </div>
                 {genelTarifArama.trim() !== '' ? (
@@ -535,7 +525,8 @@ export default function App() {
                   <h3 className="text-lg font-bold text-slate-800 mb-3">Bu Yemek Hangi Güne Eklensin?</h3>
                   <p className="text-xs text-slate-500 mb-4">Seçtiğin yemeği var olan bir menünün yanına ekstra olarak veya boş bir güne tek başına ekleyebilirsin.</p>
                   <form onSubmit={tarifTakvimeIsle} className="space-y-4">
-                    <input type="date" required value={tarifPlanTarihi} onChange={(e) => setTarifPlanTarihi(e.target.value)} className="w-full p-3 border rounded-xl bg-slate-50 outline-none focus:ring-2 focus:ring-orange-500 font-medium" />
+                    {/* YENİ: Mobilde daha büyük olan ve içi boş gözükmeyen min-h-[50px] date input */}
+                    <input type="date" required value={tarifPlanTarihi} onChange={(e) => setTarifPlanTarihi(e.target.value)} className="w-full p-3 border rounded-xl bg-slate-50 outline-none focus:ring-2 focus:ring-orange-500 font-medium min-h-[50px] block appearance-none text-slate-800" />
                     <div className="flex justify-end gap-2">
                       <button type="button" onClick={() => { setPlanModaliIcinTarif(null); setTarifPlanModalAcik(false); }} className="px-4 py-2 bg-slate-100 rounded-xl font-bold text-slate-600 text-sm">İptal</button>
                       <button type="submit" className="px-5 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-xl font-bold text-sm shadow-sm">Plana Ekle</button>

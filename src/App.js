@@ -40,7 +40,6 @@ export default function App() {
   const [modal, setModal] = useState({ acik: false, tip: '', mesaj: '', onOnay: null });
   const [yeniTarif, setYeniTarif] = useState({ ad: '', kategori: 'Ana Yemek', resim: '', malzemeler: [{ miktar: '', birim: 'gr', isim: '' }], hazirlanis: [''] });
 
-  // YENİ: Tarif Planlama State'leri
   const [tarifPlanModalAcik, setTarifPlanModalAcik] = useState(false);
   const [tarifPlanTarihi, setTarifPlanTarihi] = useState('');
 
@@ -208,14 +207,12 @@ export default function App() {
     else setMenuler(prev => prev.map(m => m.id === id ? { ...m, kategori: yeniKategori } : m));
   };
 
-  // YENİ: Hem menü hem tarif eklemeyi (üzerine yazmadan) destekleyen fonksiyon
   const tariheEkle = (tarihStr, tip, obje) => {
     setHaftalikPlan(prev => {
       const gunPlani = prev[tarihStr] || { menuAdlari: [], tarifler: [] };
       let yeniMenuAdlari = [...(gunPlani.menuAdlari || [])];
       let yeniTarifler = [...(gunPlani.tarifler || [])];
 
-      // Eski sürümden kalan veri varsa köprü yap
       if (gunPlani.menuAdi && yeniMenuAdlari.length === 0) {
         yeniMenuAdlari.push(gunPlani.menuAdi);
       }
@@ -233,7 +230,6 @@ export default function App() {
     });
   };
 
-  // YENİ: Tarif detayından tekil yemek planlama
   const tarifTakvimeIsle = (e) => {
     e.preventDefault();
     if(!tarifPlanTarihi) return;
@@ -247,11 +243,11 @@ export default function App() {
     setHaftalikPlan(prev => { const kopya = { ...prev }; delete kopya[tarihStr]; return kopya; });
   };
 
-  // YENİ: Son yenme tarihini bulma formülleri (GG.AA formatında)
+  // YENİ: Y (yıl) harfi kaldırılarak hata çözüldü
   const formatTarih = (iso) => {
     if (!iso) return '';
-    const [y, m, d] = iso.split('-');
-    return `${d}.${m}`;
+    const parcalar = iso.split('-');
+    return `${parcalar[2]}.${parcalar[1]}`;
   };
 
   const sonTarihTarif = (id) => {
@@ -262,7 +258,7 @@ export default function App() {
   const sonTarihMenu = (ad) => {
     const tarihler = Object.keys(haftalikPlan).filter(t => {
       const p = haftalikPlan[t];
-      return p.menuAdlari?.includes(ad) || p.menuAdi === ad; // Eski kayıt desteği
+      return p.menuAdlari?.includes(ad) || p.menuAdi === ad;
     }).sort((a,b) => new Date(b) - new Date(a));
     return tarihler.length > 0 ? formatTarih(tarihler[0]) : null;
   };
@@ -340,7 +336,6 @@ export default function App() {
                   
                   <div className="flex items-center gap-3">
                     <span className="bg-orange-200 text-orange-800 px-3 py-1 rounded-full text-sm font-semibold truncate">{detayGosterilenTarif.kategori}</span>
-                    {/* YENİ: Tarifin içindeki Planla Butonu */}
                     <button onClick={() => setTarifPlanModalAcik(true)} className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-1.5 rounded-full font-bold flex items-center shadow-sm text-sm">
                       <Calendar size={16} className="mr-2" /> Planla
                     </button>
@@ -367,7 +362,6 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* YENİ: Tarif Planlama Modalı */}
                 {tarifPlanModalAcik && (
                   <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[110] p-4">
                     <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full">
@@ -412,7 +406,6 @@ export default function App() {
                           </div>
                           <div className="flex-1 min-w-0 pr-2 flex flex-col items-start">
                             <h3 className="text-base sm:text-lg font-bold text-slate-800 truncate">{tarif.ad}</h3>
-                            {/* YENİ: Tarifin en son yendiği tarih */}
                             <div className="flex items-center gap-2 mt-1">
                               <span className="text-[10px] sm:text-xs text-orange-700 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded font-medium">{tarif.kategori}</span>
                               <span className="text-[10px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded flex items-center"><Calendar size={12} className="mr-1"/> Son: {sonTarihTarif(tarif.id) || 'Yok'}</span>

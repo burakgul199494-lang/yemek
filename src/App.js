@@ -182,7 +182,6 @@ export default function App() {
     if (tip === 'menu' && !menuKategorileri.includes(ad)) setMenuKategorileri([...menuKategorileri, ad]);
   };
 
-  // YENİ: KATEGORİ SIRASINI (YUKARI/AŞAĞI) DEĞİŞTİRME FONKSİYONU
   const kategoriTasi = (tip, index, yon) => {
     if (tip === 'tarif') {
       const yeniListe = [...yemekKategorileri];
@@ -198,6 +197,15 @@ export default function App() {
       yeniListe[index] = yeniListe[index + yon];
       yeniListe[index + yon] = temp;
       setMenuKategorileri(yeniListe);
+    }
+  };
+
+  // YENİ: Listeden Hızlı Kategori Değiştirme Fonksiyonu
+  const hizliKategoriGuncelle = (tip, id, yeniKategori) => {
+    if (tip === 'tarif') {
+      setTarifler(prev => prev.map(t => t.id === id ? { ...t, kategori: yeniKategori } : t));
+    } else {
+      setMenuler(prev => prev.map(m => m.id === id ? { ...m, kategori: yeniKategori } : m));
     }
   };
 
@@ -269,6 +277,7 @@ export default function App() {
             malzemeIslem={malzemeIslem} hazirlanisIslem={hazirlanisIslem} resimYukle={resimYukle} 
             menuTarifToggle={menuTarifToggle} tarifSil={tarifSil} menuSil={menuSil} 
             kategoriEkle={kategoriEkle} kategoriSil={kategoriSil} kategoriTasi={kategoriTasi}
+            hizliKategoriGuncelle={hizliKategoriGuncelle} // YENİ PROP
           />
         )}
 
@@ -338,7 +347,6 @@ export default function App() {
                 </div>
               </>
             ) : (
-              // LİSTE GÖRÜNÜMÜNE GEÇEN KATEGORİLER (Sıralama senin ayarladığın şekilde kalır)
               <>
                 <h2 className="text-xl sm:text-2xl font-bold mb-6 text-orange-800 border-b-2 border-orange-200 pb-2 flex items-center">
                   <Folder className="mr-2" size={24}/> Yemek Kategorileri

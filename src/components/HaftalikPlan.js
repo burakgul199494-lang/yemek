@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { CalendarDays, ChevronLeft, ChevronRight, ShoppingCart, Trash2, Printer } from 'lucide-react';
+import { CalendarDays, ChevronLeft, ChevronRight, ShoppingCart, Trash2, Printer, X } from 'lucide-react';
 
-export default function HaftalikPlan({ haftalikPlan, tarifler, planSil }) {
+export default function HaftalikPlan({ haftalikPlan, tarifler, menuler, planTemizle, plandanOgeSil }) {
   const [aktifPazartesi, setAktifPazartesi] = useState(() => {
     const d = new Date();
     d.setHours(0,0,0,0);
@@ -21,14 +21,16 @@ export default function HaftalikPlan({ haftalikPlan, tarifler, planSil }) {
       const dd = String(g.getDate()).padStart(2, '0');
       const isoStr = `${yyyy}-${mm}-${dd}`; 
 
-      const gosterimStr = g.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', weekday: 'long' });
-      gunler.push({ isoStr, gosterimStr });
+      const gunFormat = g.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+      const gunIsim = g.toLocaleDateString('tr-TR', { weekday: 'long' });
+
+      gunler.push({ isoStr, gunFormat, gunIsim, dateObj: g });
     }
     return gunler;
   };
 
   const haftaninGunleri = getHaftaninGunleri(aktifPazartesi);
-  const haftaAraligiMetni = `${haftaninGunleri[0].gosterimStr.split(',')[1]} - ${haftaninGunleri[6].gosterimStr.split(',')[1]}`;
+  const haftaAraligiMetni = `${haftaninGunleri[0].gunFormat} - ${haftaninGunleri[6].gunFormat}`;
 
   const haftaDegistir = (yon) => {
     const yeniPazartesi = new Date(aktifPazartesi);
@@ -86,55 +88,86 @@ export default function HaftalikPlan({ haftalikPlan, tarifler, planSil }) {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {haftaninGunleri.map(gun => {
             const planKaydi = haftalikPlan[gun.isoStr];
-            const planlananTarifler = planKaydi ? (planKaydi.tarifler || []).map(id => tarifler.find(t => t.id === id)).filter(Boolean) : [];
             
-            let mAdlari = planKaydi?.menuAdlari || [];
-            if (planKaydi?.menuAdi && mAdlari.length === 0) {
-              mAdlari = [planKaydi.menuAdi];
-            }
+            let mAdlari = [...(planKaydi?.menuAdlari || [])];
+            if (planKaydi?.menuAdi && !mAdlari.includes(planKaydi.menuAdi)) mAdlari.push(planKaydi.menuAdi);
+            
+            const gununMenuleri = mAdlari.map(mAd => menuler.find(m => m.ad === mAd)).filter(Boolean);
+            const menuTarifIDleri = new Set();
+            gununMenuleri.forEach(m => m.tarifler.forEach(tId => menuTarifIDleri.add(tId)));
+
+            const ekstraTarifIDleri = (planKaydi?.tarifler || []).filter(tId => !menuTarifIDleri.has(tId));
+            const ekstraTarifler = ekstraTarifIDleri.map(id => tarifler.find(t => t.id === id)).filter(Boolean);
 
             return (
               <div key={gun.isoStr} className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex flex-col justify-between">
                 <div>
-                  <div className="border-b pb-2 mb-3">
-                    <span className="block font-bold text-slate-800 text-base">{gun.gosterimStr.split(',')[0]}</span>
-                    <span className="text-xs text-slate-400 font-medium">{gun.gosterimStr.split(',')[1]}</span>
+                  <div className="border-b pb-2 mb-3 flex justify-between items-start">
+                    <div>
+                      <span className="block font-bold text-slate-800 text-sm xl:text-base">{gun.gunFormat}</span>
+                      <span className="text-xs text-slate-500 font-medium">{gun.gunIsim}</span>
+                    </div>
+                    {planKaydi && (
+                      <button onClick={() => planTemizle(gun.isoStr)} className="text-slate-400 hover:text-red-600 bg-slate-50 hover:bg-red-50 p-1.5 rounded-lg transition-colors" title="Tüm Günü Temizle">
+                        <Trash2 size={16} />
+                      </button>
+                    )}
                   </div>
 
                   {planKaydi ? (
-                    <div className="mb-3">
-                      {mAdlari.map((mAd, idx) => (
-                        <span key={idx} className="inline-block bg-orange-100 text-orange-800 text-[10px] font-bold px-2 py-0.5 rounded mb-2 mr-1">
-                          📦 {mAd}
-                        </span>
-                      ))}
-                      {mAdlari.length === 0 && planlananTarifler.length > 0 && (
-                        <span className="inline-block bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded mb-2">
-                          🍽️ Serbest Seçim
-                        </span>
-                      )}
-                      <div className="space-y-2">
-                        {planlananTarifler.map((t, idx) => (
-                          <div key={idx} className="bg-orange-50 p-2 rounded-lg border border-orange-100 text-xs flex justify-between items-center">
-                            <span className="font-bold text-slate-800 block truncate pr-2">{t.ad}</span>
-                            <span className="text-[9px] text-slate-500 uppercase shrink-0">({t.kategori})</span>
+                    <div className="mb-2">
+                      {/* PLANLANAN MENÜLER KISMI */}
+                      {gununMenuleri.map((menu, idx) => (
+                        <div key={`menu-${idx}`} className="mb-3 bg-orange-50/70 p-2 rounded-xl border border-orange-100 shadow-sm">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="bg-orange-100 text-orange-800 text-[10px] font-bold px-2 py-0.5 rounded flex items-center">
+                              📦 {menu.ad}
+                            </span>
+                            <button onClick={() => plandanOgeSil(gun.isoStr, 'menu', menu)} className="text-red-400 hover:text-red-600 hover:bg-red-50 p-1 rounded transition-colors" title="Menüyü Sil">
+                              <X size={14}/>
+                            </button>
                           </div>
-                        ))}
-                      </div>
+                          <div className="space-y-1 pl-1">
+                            {menu.tarifler.map(tId => {
+                              const t = tarifler.find(x => x.id === tId);
+                              return t ? (
+                                <div key={tId} className="text-[10px] font-medium text-slate-600 border-l-2 border-orange-300 pl-1.5 py-0.5">
+                                  {t.ad}
+                                </div>
+                              ) : null;
+                            })}
+                          </div>
+                        </div>
+                      ))}
+
+                      {/* SERBEST SEÇİM (EKSTRA YEMEKLER) KISMI */}
+                      {ekstraTarifler.length > 0 && (
+                        <div className="mb-3 bg-blue-50/70 p-2 rounded-xl border border-blue-100 shadow-sm">
+                          <div className="mb-2">
+                            <span className="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded flex w-fit">
+                              🍽️ Ekstra / Serbest Seçim
+                            </span>
+                          </div>
+                          <div className="space-y-1.5">
+                            {ekstraTarifler.map(t => (
+                              <div key={t.id} className="bg-white p-1.5 rounded-lg border border-blue-50 flex justify-between items-center shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
+                                <div className="flex flex-col truncate pr-2">
+                                  <span className="font-bold text-slate-700 text-[10px] truncate">{t.ad}</span>
+                                  <span className="text-[8px] text-slate-400 uppercase tracking-wider">{t.kategori}</span>
+                                </div>
+                                <button onClick={() => plandanOgeSil(gun.isoStr, 'tarif', t)} className="text-red-400 hover:text-red-600 hover:bg-red-50 p-1 rounded transition-colors shrink-0" title="Yemeği Sil">
+                                  <X size={14}/>
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <div className="text-center py-8 text-slate-300 text-xs italic">Plan yok</div>
                   )}
                 </div>
-
-                {planKaydi && (
-                  <button 
-                    onClick={() => planSil(gun.isoStr)} 
-                    className="w-full mt-3 bg-red-50 hover:bg-red-100 text-red-600 p-2 rounded-lg text-xs font-bold flex items-center justify-center transition-colors"
-                  >
-                    <Trash2 size={14} className="mr-1" /> Planı Kaldır
-                  </button>
-                )}
               </div>
             );
           })}
